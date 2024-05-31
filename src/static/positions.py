@@ -1,31 +1,26 @@
 import numpy as np
 
 START_POS = {
-      "W_P": 6 * 8 * '0' + 8 * '1' + 8 * '0',
-      "W_R": 7 * 8 * '0' + "10000001", 
-      "W_N": 7 * 8 * '0' + "01000010",
-      "W_B": 7 * 8 * '0' + "00100100",
-      "W_Q": 7 * 8 * '0' + "00010000",
-      "W_K": 7 * 8 * '0' + "00001000",
+      "W_P": np.ulonglong(0b1111111100000000),
+      "W_R": np.ulonglong(0b10000001),
+      "W_N": np.ulonglong(0b01000010),
+      "W_B": np.ulonglong(0b00100100),
+      "W_Q": np.ulonglong(0b00010000),
+      "W_K": np.ulonglong(0b00001000),
 
-      "B_P": 8 * '0' + 8 * '1' + 6 * 8 * '0',
-      "B_R": "10000001" + 7 * 8 * '0',
-      "B_N": "01000010" + 7 * 8 * '0',
-      "B_B": "00100100" + 7 * 8 * '0',
-      "B_Q": "00010000" + 7 * 8 * '0',
-      "B_K": "00001000" + 7 * 8 * '0',
+      "B_P": np.ulonglong(0b0000000011111111000000000000000000000000000000000000000000000000),
+      "B_R": np.ulonglong(0b1000000100000000000000000000000000000000000000000000000000000000),
+      "B_N": np.ulonglong(0b0100001000000000000000000000000000000000000000000000000000000000),
+      "B_B": np.ulonglong(0b0010010000000000000000000000000000000000000000000000000000000000),
+      "B_Q": np.ulonglong(0b0001000000000000000000000000000000000000000000000000000000000000),
+      "B_K": np.ulonglong(0b0000100000000000000000000000000000000000000000000000000000000000),
+
+      "S": np.ulonglong(0b1)
 }
 
-def convert_str_pos_into_np(pos):
-    pieces_pos = np.zeros(64, dtype=int)
-    for key, value in pos.items():
-        if len(value) > 64:
-            raise ValueError("Length of the bitboard is over 64!")
-        pos[key] = np.array(list(map(lambda bit: int(bit), value)), dtype=int)
-        pieces_pos = np.bitwise_or(pieces_pos, pos[key])
-    pos["pos"] = pieces_pos
 
-convert_str_pos_into_np(START_POS)
+
+
 
 
 
