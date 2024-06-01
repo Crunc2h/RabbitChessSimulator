@@ -77,7 +77,37 @@ class BitboardMask:
     def bishop_attack_mask(piece_position_mask) -> np.ulonglong:
         larger_stride = 9
         smaller_stride = 7
-    
+
+        north_east_diagonal_mask = np.ulonglong(0)
+        if np.bitwise_and(piece_position_mask, np.bitwise_or(BitboardMask.EDGE_MASK_TOP, BitboardMask.EDGE_MASK_RIGHT)) == 0:
+            north_east_diagonal_mask = piece_position_mask
+            while np.bitwise_and(north_east_diagonal_mask, np.bitwise_or(BitboardMask.EDGE_MASK_TOP, BitboardMask.EDGE_MASK_RIGHT)) == 0:
+                north_east_diagonal_mask = np.bitwise_or(north_east_diagonal_mask, np.left_shift(north_east_diagonal_mask, np.uint(smaller_stride)))
+            north_east_diagonal_mask = np.bitwise_xor(piece_position_mask, north_east_diagonal_mask)
+
+        north_west_diagonal_mask = np.ulonglong(0)
+        if np.bitwise_and(piece_position_mask, np.bitwise_or(BitboardMask.EDGE_MASK_TOP, BitboardMask.EDGE_MASK_LEFT)) == 0:
+            north_west_diagonal_mask = piece_position_mask
+            while np.bitwise_and(north_west_diagonal_mask, np.bitwise_or(BitboardMask.EDGE_MASK_TOP, BitboardMask.EDGE_MASK_LEFT)) == 0:
+                north_west_diagonal_mask = np.bitwise_or(north_west_diagonal_mask, np.left_shift(north_west_diagonal_mask, np.uint(larger_stride)))
+            north_west_diagonal_mask = np.bitwise_xor(piece_position_mask, north_west_diagonal_mask)
+        
+        south_east_diagonal_mask = np.ulonglong(0)
+        if np.bitwise_and(piece_position_mask, np.bitwise_or(BitboardMask.EDGE_MASK_BOTTOM, BitboardMask.EDGE_MASK_RIGHT)) == 0:
+            south_east_diagonal_mask = piece_position_mask
+            while np.bitwise_and(south_east_diagonal_mask, np.bitwise_or(BitboardMask.EDGE_MASK_BOTTOM, BitboardMask.EDGE_MASK_RIGHT)) == 0:
+                south_east_diagonal_mask = np.bitwise_or(south_east_diagonal_mask, np.right_shift(south_east_diagonal_mask, np.uint(larger_stride)))
+            south_east_diagonal_mask = np.bitwise_xor(piece_position_mask, south_east_diagonal_mask)
+
+        south_west_diagonal_mask = np.ulonglong(0)
+        if np.bitwise_and(piece_position_mask, np.bitwise_or(BitboardMask.EDGE_MASK_BOTTOM, BitboardMask.EDGE_MASK_LEFT)) == 0:
+            south_west_diagonal_mask = piece_position_mask
+            while np.bitwise_and(south_west_diagonal_mask, np.bitwise_or(BitboardMask.EDGE_MASK_BOTTOM, BitboardMask.EDGE_MASK_LEFT)) == 0:
+                south_west_diagonal_mask = np.bitwise_or(south_west_diagonal_mask, np.right_shift(south_west_diagonal_mask, np.uint(smaller_stride)))
+            south_west_diagonal_mask = np.bitwise_xor(piece_position_mask, south_west_diagonal_mask) 
+        
+        return np.bitwise_or(np.bitwise_or(north_east_diagonal_mask, north_west_diagonal_mask),
+                             np.bitwise_or(south_east_diagonal_mask, south_west_diagonal_mask))
 
 
 
