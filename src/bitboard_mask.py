@@ -113,41 +113,68 @@ class BitboardMask:
     def knight_attack_mask(piece_position_mask) -> np.ulonglong:
         stride_count = 3
         file_stride = 1
-        
+        rank_stride = 8
 
-        left_file_attack_mask = np.ulonglong(0)
+        west_file_attack_mask = np.ulonglong(0)
         if np.bitwise_and(piece_position_mask, BitboardMask.EDGE_MASK_LEFT) == 0:
-            left_file_attack_mask = piece_position_mask
+            west_file_attack_mask = piece_position_mask
             
             for i in range(stride_count):
                 
-                left_file_attack_mask = np.left_shift(left_file_attack_mask, np.uint(file_stride))
+                west_file_attack_mask = np.left_shift(west_file_attack_mask, np.uint(file_stride))
                 
-                if np.bitwise_and(left_file_attack_mask, BitboardMask.EDGE_MASK_LEFT) != 0 and i < stride_count - 1:
-                    left_file_attack_mask = np.ulonglong(0)
+                if np.bitwise_and(west_file_attack_mask, BitboardMask.EDGE_MASK_LEFT) != 0 and i < stride_count - 1:
+                    west_file_attack_mask = np.ulonglong(0)
                     break     
                 if i == stride_count - 1:
-                    left_file_attack_mask = BitboardMask.__assign_knight_file_mask(left_file_attack_mask)
-        right_file_attack_mask = np.ulonglong(0)
+                    west_file_attack_mask = BitboardMask.__assign_knight_file_mask(west_file_attack_mask)
+        
+        east_file_attack_mask = np.ulonglong(0)
         if np.bitwise_and(piece_position_mask, BitboardMask.EDGE_MASK_RIGHT) == 0:
-            right_file_attack_mask = piece_position_mask
+            east_file_attack_mask = piece_position_mask
             
             for i in range(stride_count):
                 
-                right_file_attack_mask = np.right_shift(right_file_attack_mask, np.uint(file_stride))
+                east_file_attack_mask = np.right_shift(east_file_attack_mask, np.uint(file_stride))
                 
-                if np.bitwise_and(right_file_attack_mask, BitboardMask.EDGE_MASK_RIGHT) != 0 and i < stride_count - 1:
-                    right_file_attack_mask = np.ulonglong(0)
+                if np.bitwise_and(east_file_attack_mask, BitboardMask.EDGE_MASK_RIGHT) != 0 and i < stride_count - 1:
+                    east_file_attack_mask = np.ulonglong(0)
                     break     
                 if i == stride_count - 1:
-                    right_file_attack_mask = BitboardMask.__assign_knight_file_mask(right_file_attack_mask)
+                    east_file_attack_mask = BitboardMask.__assign_knight_file_mask(east_file_attack_mask)
+        
+        
+        north_rank_attack_mask = np.ulonglong(0)
+        if np.bitwise_and(piece_position_mask, BitboardMask.EDGE_MASK_TOP) == 0:
+            north_rank_attack_mask = piece_position_mask
+            
+            for i in range(stride_count):
+                
+                north_rank_attack_mask = np.left_shift(north_rank_attack_mask, np.uint(rank_stride))
+                
+                if np.bitwise_and(north_rank_attack_mask, BitboardMask.EDGE_MASK_TOP) != 0 and i < stride_count - 1:
+                    north_rank_attack_mask = np.ulonglong(0)
+                    break     
+                if i == stride_count - 1:
+                    north_rank_attack_mask = BitboardMask.__assign_knight_rank_mask(north_rank_attack_mask)
+        
+        south_rank_attack_mask = np.ulonglong(0)
+        if np.bitwise_and(piece_position_mask, BitboardMask.EDGE_MASK_BOTTOM) == 0:
+            south_rank_attack_mask = piece_position_mask
+            
+            for i in range(stride_count):
+                
+                south_rank_attack_mask = np.right_shift(south_rank_attack_mask, np.uint(rank_stride))
+                
+                if np.bitwise_and(south_rank_attack_mask, BitboardMask.EDGE_MASK_BOTTOM) != 0 and i < stride_count - 1:
+                    south_rank_attack_mask = np.ulonglong(0)
+                    break     
+                if i == stride_count - 1:
+                    south_rank_attack_mask = BitboardMask.__assign_knight_rank_mask(south_rank_attack_mask)
                     
-                
-                
         
-        
-        
-        return np.bitwise_or(left_file_attack_mask, right_file_attack_mask)
+        return np.bitwise_or(np.bitwise_or(west_file_attack_mask, east_file_attack_mask),
+                             np.bitwise_or(north_rank_attack_mask, south_rank_attack_mask))
 
     @staticmethod
     def __assign_knight_file_mask(file_attack_mask):
@@ -164,4 +191,15 @@ class BitboardMask:
         return file_attack_mask
 
 
-    
+    @staticmethod
+    def __assign_knight_rank_mask(rank_attack_mask):
+        file_stride = 1
+        if np.bitwise_and(rank_attack_mask, np.bitwise_or(BitboardMask.EDGE_MASK_LEFT, BitboardMask.EDGE_MASK_RIGHT)) == 0:
+            rank_attack_mask = np.bitwise_or(np.left_shift(rank_attack_mask, np.uint(file_stride)),
+                                             np.right_shift(rank_attack_mask, np.uint(file_stride)))
+            return rank_attack_mask
+        elif np.bitwise_and(rank_attack_mask, BitboardMask.EDGE_MASK_LEFT) == 0:
+            rank_attack_mask = np.left_shift(rank_attack_mask, np.uint(file_stride))
+            return rank_attack_mask
+        rank_attack_mask = np.right_shift(rank_attack_mask, np.uint(file_stride))
+        return rank_attack_mask
