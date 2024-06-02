@@ -8,7 +8,7 @@ class BitboardMasks:
         if piece_type not in self.__all_attack_masks.keys():
             raise KeyError("Invalid piece type for attack mask retreival!")
         
-        piece_pos_mask = self.__get_piece_position_mask(square_idx)
+        piece_pos_mask = self.get_piece_position_mask(square_idx)
         
         if piece_type == Pieces.W_PAWN or piece_type == Pieces.B_PAWN:
             try:
@@ -30,6 +30,9 @@ class BitboardMasks:
             return self.__all_path_masks[piece_type][(source_square_idx, target_square_idx)]
         except KeyError:
             return None
+    
+    def get_piece_position_mask(self, square_idx) -> np.ulonglong:
+        return np.ulonglong(1 << square_idx)
     
     def __init__(self):
         self.__EDGE_MASK_TOP = np.ulonglong(0b11111111 << 56)
@@ -60,7 +63,7 @@ class BitboardMasks:
         
         for key in all_attack_masks.keys():
             for i in range(64):
-                piece_position_mask = self.__get_piece_position_mask(i)
+                piece_position_mask = self.get_piece_position_mask(i)
                 if key != Pieces.W_PAWN and key != Pieces.B_PAWN:
                     all_attack_masks[key][piece_position_mask] = self.__attack_mask_type_switch(key, piece_position_mask)
                 else:
@@ -81,7 +84,7 @@ class BitboardMasks:
             for i in range(64):
                 source_pos_attack_mask = self.get_attack_mask_of_type(i, key)
                 for f in range(64):
-                    target_pos_mask = self.__get_piece_position_mask(f)
+                    target_pos_mask = self.get_piece_position_mask(f)
                     if np.bitwise_and(source_pos_attack_mask, target_pos_mask) == 0:
                         continue
                     target_pos_attack_mask = self.get_attack_mask_of_type(f, key)
@@ -92,9 +95,6 @@ class BitboardMasks:
         all_path_masks[Pieces.QUEEN].update(all_path_masks[Pieces.ROOK])
         
         return all_path_masks
-    
-    def __get_piece_position_mask(self, square_idx) -> np.ulonglong:
-        return np.ulonglong(1 << square_idx)
     
     def __get_bits_inbetween(self, smaller_idx, larger_idx) -> np.ulonglong:
         bits_in_between = np.ulonglong(0b1)

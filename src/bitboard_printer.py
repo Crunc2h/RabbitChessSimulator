@@ -1,9 +1,9 @@
 class BitboardPrinter:
     
     @staticmethod
-    def position_to_str(pos):
+    def position_to_str(board):
         
-        binary_as_str = format(pos, "#b")[2::].zfill(64)[::-1]
+        binary_as_str = format(board, "#b")[2::].zfill(64)[::-1]
         res = "\n\n"
         
         for i in range(len(binary_as_str), 0, -1):
@@ -19,5 +19,5 @@ class BitboardPrinter:
         return res
     
     @staticmethod
-    def print(pos):
-        print(BitboardPrinter.position_to_str(pos))
+    def print(board):
+        print(BitboardPrinter.position_to_str(board))
