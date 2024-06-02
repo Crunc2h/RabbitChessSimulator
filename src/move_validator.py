@@ -25,19 +25,20 @@ class MoveValidator:
                                              arr=pieces_arr))
     
     def is_valid(self, from_square, to_square, board_obj):
+        board_data = board_obj.data
         from_square_idx = from_square["idx"]
         to_square_idx = to_square["idx"]
-        side = board_obj.data["S"]
+        side = board_data["S"]
         from_sqr_piece_pos_mask = self.__bb_masks.get_piece_position_mask(from_square_idx)
         to_sqr_piece_pos_mask = self.__bb_masks.get_piece_position_mask(to_square_idx)
 
-        if np.bitwise_and(from_sqr_piece_pos_mask, board_obj.data["All_Pieces_mask"]) == 0:
+        if np.bitwise_and(from_sqr_piece_pos_mask, board_data["All_Pieces_mask"]) == 0:
             raise Exception("There isn't a piece at the specified source square!")
-        if ((side and np.bitwise_and(from_sqr_piece_pos_mask, board_obj.data["W_Pieces_mask"]) == 0)
-             or (not side and np.bitwise_and(from_sqr_piece_pos_mask, board_obj.data["B_Pieces_mask"]) == 0)):
+        if ((side and np.bitwise_and(from_sqr_piece_pos_mask, board_data["W_Pieces_mask"]) == 0)
+             or (not side and np.bitwise_and(from_sqr_piece_pos_mask, board_data["B_Pieces_mask"]) == 0)):
             raise Exception("That piece at the source square belongs to the opponent!")
-        if ((side and np.bitwise_and(to_sqr_piece_pos_mask, board_obj.data["W_Pieces_mask"]) != 0)
-             or (not side and np.bitwise_and(to_sqr_piece_pos_mask, board_obj.data["B_Pieces_mask"]) != 0)):
+        if ((side and np.bitwise_and(to_sqr_piece_pos_mask, board_data["W_Pieces_mask"]) > 0)
+             or (not side and np.bitwise_and(to_sqr_piece_pos_mask, board_data["B_Pieces_mask"]) > 0)):
             raise Exception("Another one of your pieces already occupies target square!")
         
         if side:
@@ -47,11 +48,36 @@ class MoveValidator:
             if piece_type_idx == 5: piece_type_idx *= -1
             piece_type = self.__board_key_to_piece_type(piece_type_idx)
         
-        move_exists_for_piece_type = np.bitwise_and(self.__bb_masks.get_attack_mask_of_type(from_square_idx, piece_type), to_sqr_piece_pos_mask) > 0
+        from_sqr_piece_attack_mask, pawn_movement = self.__bb_masks.get_attack_mask_of_type(from_square_idx, piece_type)
+        
+        move_exists_for_piece_type = np.bitwise_and(from_sqr_piece_attack_mask, to_sqr_piece_pos_mask) > 0
         if not move_exists_for_piece_type:
             raise Exception("Illegal move!")
-
         
+        if pawn_movement != None:
+            if ((side and np.bitwise_and(to_sqr_piece_pos_mask, board_data["B_Pieces_mask"]) > 0) 
+            or (not side and np.bitwise_and(to_sqr_piece_pos_mask, board_data["W_Pieces_mask"]) > 0)):
+                raise Exception("Pawn cannot move to a square already occupied by an enemy piece!")
+        
+        adjacent_sqr_mask = self.__bb_masks.get_attack_mask_of_type(from_square_idx, Pieces.KING)
+        is_move_to_sqr_adjacent = np.bitwise_and(adjacent_sqr_mask, to_sqr_piece_pos_mask) > 0
+        if not is_move_to_sqr_adjacent and piece_type != Pieces.KNIGHT:
+            piece_movement_path = self.__bb_masks.get_path_mask_of_type(from_square_idx, to_square_idx, piece_type)
+            if np.bitwise_and(piece_movement_path, board_data["All_Pieces_mask"]) > 0:
+                raise Exception("There is a piece obstructing the path towards target square!")
+        
+        if side:
+            is_capture = np.bitwise_and(to_sqr_piece_pos_mask, board_data["B_Pieces_mask"]) > 0
+            to_square_piece_attack_mask = self.__bb_masks.get_attack_mask_of_type(to_square_idx, piece_type)
+            is_check = np.bitwise_and(to_square_piece_attack_mask, board_data["B_Pieces_arr"][4])
+        else:
+            is_capture = np.bitwise_and(to_sqr_piece_pos_mask, board_data["W_Pieces_mask"]) > 0
+            to_square_piece_attack_mask = self.__bb_masks.get_attack_mask_of_type(to_square_idx, piece_type)
+            is_check = np.bitwise_and(to_square_piece_attack_mask, board_data["W_Pieces_arr"][4])
+        
+
+
+
 
 
         

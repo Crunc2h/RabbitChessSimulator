@@ -11,5 +11,5 @@ from move_validator import MoveValidator
 test_board = Bitboard(Positions.start_pos())
 masks_obj = BitboardMasks()
 validator = MoveValidator(masks_obj)
-print(validator.is_valid(Squares.a1, Squares.a3, test_board))
+BitboardPrinter.print(test_board.data["W_Attacks_mask"])
 

@@ -13,15 +13,15 @@ class BitboardMasks:
         if piece_type == Pieces.W_PAWN or piece_type == Pieces.B_PAWN:
             try:
                 try:
-                    return self.__all_attack_masks[piece_type]["attack"][piece_pos_mask]
+                    return self.__all_attack_masks[piece_type]["attack"][piece_pos_mask], True
                 except KeyError:
-                    return self.__all_attack_masks[piece_type]["move"][piece_pos_mask]
+                    return self.__all_attack_masks[piece_type]["move"][piece_pos_mask], None
             except KeyError:
-                return None
+                return None, None
         try:
-            return self.__all_attack_masks[piece_type][piece_pos_mask]
+            return self.__all_attack_masks[piece_type][piece_pos_mask], None
         except KeyError:
-            return None  
+            return None, None  
         
     def get_path_mask_of_type(self, source_square_idx, target_square_idx, piece_type) -> np.ulonglong:
         if piece_type not in self.__all_path_masks.keys():
@@ -82,12 +82,12 @@ class BitboardMasks:
         }
         for key in all_path_masks.keys():
             for i in range(64):
-                source_pos_attack_mask = self.get_attack_mask_of_type(i, key)
+                source_pos_attack_mask = self.get_attack_mask_of_type(i, key)[0]
                 for f in range(64):
                     target_pos_mask = self.get_piece_position_mask(f)
                     if np.bitwise_and(source_pos_attack_mask, target_pos_mask) == 0:
                         continue
-                    target_pos_attack_mask = self.get_attack_mask_of_type(f, key)
+                    target_pos_attack_mask = self.get_attack_mask_of_type(f, key)[0]
                     all_path_masks[key][(i, f)] = self.__piece_path_mask(i, f, source_pos_attack_mask, target_pos_attack_mask, key)
         
         all_path_masks[Pieces.QUEEN] = {}
