@@ -4,26 +4,33 @@ from static.pieces import Pieces
 
 class BitboardMasks:
     
-    def move_exists(self, from_square, to_square, piece_type) -> bool:
-        from_piece_pos_mask = self.__get_piece_position_mask(from_square["idx"])
-        to_piece_pos_mask = self.__get_piece_position_mask(to_square["idx"])
-
+    def get_attack_mask_of_type(self, square_idx, piece_type) -> np.ulonglong:
+        if piece_type not in self.__all_attack_masks.keys():
+            raise KeyError("Invalid piece type for attack mask retreival!")
+        
+        piece_pos_mask = self.__get_piece_position_mask(square_idx)
+        
         if piece_type == Pieces.W_PAWN or piece_type == Pieces.B_PAWN:
             try:
                 try:
-                    matching_mask = self.__all_piece_masks[piece_type]["attack"][from_piece_pos_mask]
+                    return self.__all_attack_masks[piece_type]["attack"][piece_pos_mask]
                 except KeyError:
-                    matching_mask = self.__all_piece_masks[piece_type]["move"][from_piece_pos_mask]
+                    return self.__all_attack_masks[piece_type]["move"][piece_pos_mask]
             except KeyError:
-                raise ValueError("Invalid move!")
-            return np.bitwise_and(matching_mask, to_piece_pos_mask) > 0
+                return None
         try:
-            matching_mask = self.__all_piece_masks[piece_type][from_piece_pos_mask]
+            return self.__all_attack_masks[piece_type][piece_pos_mask]
         except KeyError:
-            raise ValueError("Invalid move!")
+            return None  
         
-        return np.bitwise_and(matching_mask, to_piece_pos_mask) > 0
-
+    def get_path_mask_of_type(self, source_square_idx, target_square_idx, piece_type) -> np.ulonglong:
+        if piece_type not in self.__all_path_masks.keys():
+            raise KeyError("Invalid piece type for path mask retreival!")
+        try:
+            return self.__all_path_masks[piece_type][(source_square_idx, target_square_idx)]
+        except KeyError:
+            return None
+    
     def __init__(self):
         self.__EDGE_MASK_TOP = np.ulonglong(0b11111111 << 56)
         self.__EDGE_MASK_BOTTOM = np.ulonglong(0b11111111)
@@ -31,13 +38,14 @@ class BitboardMasks:
         self.__EDGE_MASK_RIGHT = np.ulonglong(0b0000000100000001000000010000000100000001000000010000000100000001)
         self.__W_EN_PASSANT_MASK = np.ulonglong(0b1111111100000000)
         self.__B_EN_PASSANT_MASK = np.ulonglong(0b0000000011111111 << 48)
-        self.__all_piece_masks = self.__construct_all_piece_masks()
+        self.__all_attack_masks = self.__construct_all_attack_masks()
+        self.__all_path_masks = self.__construct_all_path_masks()
     
-    def __construct_all_piece_masks(self):
-        all_piece_masks = {
+    def __construct_all_attack_masks(self) -> dict:
+        all_attack_masks = {
             Pieces.W_PAWN:{
                 "move":{},
-                "attack": {}
+                "attack":{}
             },
             Pieces.B_PAWN:{
                 "move":{},
@@ -50,19 +58,52 @@ class BitboardMasks:
             Pieces.KING:{}
         }
         
-        for key in all_piece_masks.keys():
+        for key in all_attack_masks.keys():
             for i in range(64):
                 piece_position_mask = self.__get_piece_position_mask(i)
                 if key != Pieces.W_PAWN and key != Pieces.B_PAWN:
-                    all_piece_masks[key][piece_position_mask] = self.__get_masks_of_type(key, piece_position_mask)
+                    all_attack_masks[key][piece_position_mask] = self.__attack_mask_type_switch(key, piece_position_mask)
                 else:
-                    pawn_movement_mask, pawn_attack_mask = self.__get_masks_of_type(key, piece_position_mask)
-                    all_piece_masks[key]["move"][piece_position_mask] = pawn_movement_mask
-                    all_piece_masks[key]["attack"][piece_position_mask] = pawn_attack_mask
+                    pawn_movement_mask, pawn_attack_mask = self.__attack_mask_type_switch(key, piece_position_mask)
+                    all_attack_masks[key]["move"][piece_position_mask] = pawn_movement_mask
+                    all_attack_masks[key]["attack"][piece_position_mask] = pawn_attack_mask 
+     
+        return all_attack_masks
+    
+    def __construct_all_path_masks(self) -> dict:
+        all_path_masks = {
+            Pieces.W_PAWN:{},
+            Pieces.B_PAWN:{},
+            Pieces.ROOK:{},
+            Pieces.BISHOP:{},
+        }
+        for key in all_path_masks.keys():
+            for i in range(64):
+                source_pos_attack_mask = self.get_attack_mask_of_type(i, key)
+                for f in range(64):
+                    target_pos_mask = self.__get_piece_position_mask(f)
+                    if np.bitwise_and(source_pos_attack_mask, target_pos_mask) == 0:
+                        continue
+                    target_pos_attack_mask = self.get_attack_mask_of_type(f, key)
+                    all_path_masks[key][(i, f)] = self.__piece_path_mask(i, f, source_pos_attack_mask, target_pos_attack_mask, key)
         
-        return all_piece_masks
+        all_path_masks[Pieces.QUEEN] = {}
+        all_path_masks[Pieces.QUEEN].update(all_path_masks[Pieces.BISHOP])
+        all_path_masks[Pieces.QUEEN].update(all_path_masks[Pieces.ROOK])
+        
+        return all_path_masks
+    
+    def __get_piece_position_mask(self, square_idx) -> np.ulonglong:
+        return np.ulonglong(1 << square_idx)
+    
+    def __get_bits_inbetween(self, smaller_idx, larger_idx) -> np.ulonglong:
+        bits_in_between = np.ulonglong(0b1)
+        diff = larger_idx - smaller_idx
+        for i in range(diff):
+            bits_in_between = np.bitwise_or(bits_in_between, np.left_shift(bits_in_between, np.uint(1)))
+        return np.left_shift(bits_in_between, np.uint(smaller_idx))
 
-    def __get_masks_of_type(self, piece_type, piece_position_mask):
+    def __attack_mask_type_switch(self, piece_type, piece_position_mask):
         if piece_type == Pieces.W_PAWN:
             return self.__pawn_attack_mask(piece_position_mask, True), self.__pawn_movement_mask(piece_position_mask, True)
         elif piece_type == Pieces.B_PAWN:
@@ -77,11 +118,22 @@ class BitboardMasks:
             return self.__queen_attack_mask(piece_position_mask)
         elif piece_type == Pieces.KING:
             return self.__king_attack_mask(piece_position_mask)
-        else:
-            raise ValueError("Invalid piece type passed to mask getter!")
-
-    def __get_piece_position_mask(self, square_idx) -> np.ulonglong:
-        return np.ulonglong(1 << square_idx)
+        raise ValueError("Invalid piece type passed to the mask getter!")
+    
+    def __piece_path_mask(self,
+                          source_pos_idx,
+                          target_pos_idx, 
+                          source_pos_attack_mask, 
+                          target_pos_attack_mask, 
+                          piece_type) -> np.ulonglong:
+        
+        if source_pos_idx > target_pos_idx: larger_idx, smaller_idx = source_pos_idx, target_pos_idx
+        else: larger_idx, smaller_idx = target_pos_idx, source_pos_idx
+        interval_bits_mask = self.__get_bits_inbetween(smaller_idx, larger_idx)
+        
+        if piece_type == Pieces.W_PAWN or piece_type == Pieces.B_PAWN:
+            return np.bitwise_and(interval_bits_mask, source_pos_attack_mask)
+        return np.bitwise_and(interval_bits_mask, np.bitwise_and(source_pos_attack_mask, target_pos_attack_mask))
 
     def __pawn_movement_mask(self, piece_position_mask, color) -> np.ulonglong:
         stride = 8

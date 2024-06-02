@@ -8,4 +8,8 @@ from static.positions import Positions
 from static.pieces import Pieces
 
 masks = BitboardMasks()
-print(masks.move_exists(Squares.b1, Squares.a3, Pieces.KNIGHT))
+
+atk1 = masks.get_path_mask_of_type(12, 33, Pieces.BISHOP) 
+BitboardPrinter.print(atk1)
+
+
