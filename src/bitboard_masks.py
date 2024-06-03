@@ -4,11 +4,11 @@ from static.pieces import Pieces
 
 class BitboardMasks:
     
-    def get_attack_mask_of_type(self, square_idx, piece_type) -> np.ulonglong:
+    def get_attack_mask_of_type(self, square_idx, piece_type, pos_mask=None) -> np.ulonglong:
         if piece_type not in self.__all_attack_masks.keys():
             raise KeyError("Invalid piece type for attack mask retreival!")
         
-        piece_pos_mask = self.get_piece_position_mask(square_idx)
+        piece_pos_mask = self.get_piece_position_mask(square_idx) if pos_mask is None else pos_mask
         
         if piece_type == Pieces.W_PAWN or piece_type == Pieces.B_PAWN:
             try:
@@ -193,6 +193,34 @@ class BitboardMasks:
         
         return np.bitwise_or(file_attack_mask, rank_attack_mask)
     
+    def rook_path_blocked_attack_mask(self, piece_position_mask, unblocked_attack_mask):
+        file_stride = 1 
+        rank_stride = 8
+        org_piece_position_mask = piece_position_mask
+        file_attack_mask = piece_position_mask
+        rank_attack_mask = piece_position_mask
+        
+        while np.bitwise_and(np.left_shift(piece_position_mask, np.uint(file_stride)), unblocked_attack_mask) > 0:
+            piece_position_mask = np.left_shift(piece_position_mask, np.uint(file_stride))
+            file_attack_mask = np.bitwise_or(file_attack_mask,piece_position_mask )
+        piece_position_mask = org_piece_position_mask
+        while np.bitwise_and(np.right_shift(piece_position_mask, np.uint(file_stride)), unblocked_attack_mask) > 0:
+            piece_position_mask = np.right_shift(piece_position_mask, np.uint(file_stride))
+            file_attack_mask = np.bitwise_or(file_attack_mask, piece_position_mask)
+        piece_position_mask = org_piece_position_mask
+        
+        while np.bitwise_and(np.left_shift(piece_position_mask, np.uint(rank_stride)), unblocked_attack_mask) > 0:
+            piece_position_mask = np.left_shift(piece_position_mask, np.uint(rank_stride))
+            rank_attack_mask = np.bitwise_or(rank_attack_mask, piece_position_mask)
+
+        piece_position_mask = org_piece_position_mask
+        while np.bitwise_and(np.right_shift(piece_position_mask, np.uint(rank_stride)), unblocked_attack_mask) > 0:
+            piece_position_mask = np.right_shift(piece_position_mask, np.uint(rank_stride))
+            rank_attack_mask = np.bitwise_or(rank_attack_mask, piece_position_mask)
+        
+        return np.bitwise_xor(np.bitwise_or(file_attack_mask, rank_attack_mask), org_piece_position_mask)
+        
+    
     def __bishop_attack_mask(self, piece_position_mask) -> np.ulonglong:
         larger_stride = 9
         smaller_stride = 7
@@ -227,6 +255,42 @@ class BitboardMasks:
         
         return np.bitwise_or(np.bitwise_or(north_east_diagonal_mask, north_west_diagonal_mask),
                              np.bitwise_or(south_east_diagonal_mask, south_west_diagonal_mask))
+    
+    def bishop_path_blocked_attack_mask(self, piece_position_mask, unblocked_attack_mask) -> np.ulonglong:
+        larger_stride = 9
+        smaller_stride = 7
+        org_piece_position_mask = piece_position_mask
+        north_east_diagonal_mask = piece_position_mask
+        north_west_diagonal_mask = piece_position_mask
+        south_east_diagonal_mask = piece_position_mask
+        south_west_diagonal_mask = piece_position_mask
+        
+        while np.bitwise_and(np.left_shift(piece_position_mask, np.uint(smaller_stride)), unblocked_attack_mask) > 0:
+            piece_position_mask = np.left_shift(piece_position_mask, np.uint(smaller_stride))
+            north_east_diagonal_mask = np.bitwise_or(north_east_diagonal_mask, piece_position_mask)
+        
+        piece_position_mask = org_piece_position_mask
+        while np.bitwise_and(np.left_shift(piece_position_mask, np.uint(larger_stride)), unblocked_attack_mask) > 0:
+            piece_position_mask = np.left_shift(piece_position_mask, np.uint(larger_stride))
+            north_west_diagonal_mask = np.bitwise_or(north_west_diagonal_mask, piece_position_mask)
+        
+        piece_position_mask = org_piece_position_mask
+        while np.bitwise_and(np.right_shift(piece_position_mask, np.uint(smaller_stride)), unblocked_attack_mask) > 0:
+            piece_position_mask = np.right_shift(piece_position_mask, np.uint(smaller_stride))
+            south_west_diagonal_mask = np.bitwise_or(south_west_diagonal_mask, piece_position_mask)
+        
+        piece_position_mask = org_piece_position_mask
+        while np.bitwise_and(np.right_shift(piece_position_mask, np.uint(larger_stride)), unblocked_attack_mask) > 0:
+            piece_position_mask = np.right_shift(piece_position_mask, np.uint(larger_stride))
+            south_east_diagonal_mask = np.bitwise_or(south_east_diagonal_mask, piece_position_mask)
+        
+        return np.bitwise_xor(np.bitwise_or(np.bitwise_or(north_east_diagonal_mask,
+                                                          north_west_diagonal_mask), 
+                                            np.bitwise_or(south_east_diagonal_mask,
+                                                          south_west_diagonal_mask)),
+                              org_piece_position_mask)
+        
+
 
     def __knight_attack_mask(self, piece_position_mask) -> np.ulonglong:
         stride_count = 3
@@ -320,6 +384,14 @@ class BitboardMasks:
     
     def __queen_attack_mask(self, piece_position_mask) -> np.ulonglong:
         return np.bitwise_or(self.__rook_attack_mask(piece_position_mask), self.__bishop_attack_mask(piece_position_mask))
+    
+    def queen_path_blocked_attack_mask(self, piece_position_mask, unblocked_attack_mask):
+        unblocked_rook = np.bitwise_and(self.get_attack_mask_of_type(None, Pieces.ROOK, pos_mask=piece_position_mask)[0],
+                                        unblocked_attack_mask)
+        unblocked_bishop = np.bitwise_and(self.get_attack_mask_of_type(None, Pieces.BISHOP, pos_mask=piece_position_mask)[0],
+                                          unblocked_attack_mask)
+        return np.bitwise_or(self.bishop_path_blocked_attack_mask(piece_position_mask, unblocked_bishop), 
+                             self.rook_path_blocked_attack_mask(piece_position_mask, unblocked_rook))
     
     def __king_attack_mask(self, piece_position_mask) -> np.ulonglong:
         rank_stride = 8
