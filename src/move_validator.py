@@ -24,6 +24,10 @@ class MoveValidator:
                                              axis=0, 
                                              arr=pieces_arr))
     
+
+
+
+    
     def is_valid(self, from_square, to_square, board_obj):
         board_data = board_obj.data
         from_square_idx = from_square["idx"]
@@ -66,6 +70,7 @@ class MoveValidator:
             if np.bitwise_and(piece_movement_path, board_data["All_Pieces_mask"]) > 0:
                 raise Exception("There is a piece obstructing the path towards target square!")
         
+        
         if side:
             is_capture = np.bitwise_and(to_sqr_piece_pos_mask, board_data["B_Pieces_mask"]) > 0
             to_square_piece_attack_mask = self.__bb_masks.get_attack_mask_of_type(to_square_idx, piece_type)
@@ -74,6 +79,8 @@ class MoveValidator:
             is_capture = np.bitwise_and(to_sqr_piece_pos_mask, board_data["W_Pieces_mask"]) > 0
             to_square_piece_attack_mask = self.__bb_masks.get_attack_mask_of_type(to_square_idx, piece_type)
             is_check = np.bitwise_and(to_square_piece_attack_mask, board_data["W_Pieces_arr"][4])
+
+        
         
 
 
