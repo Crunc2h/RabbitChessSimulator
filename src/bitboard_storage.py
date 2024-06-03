@@ -34,7 +34,8 @@ class BitboardMasks:
     
     
     
-    def __init__(self):
+    def __init__(self, helper_obj):
+        self.helper = helper_obj
         self.__EDGE_MASK_TOP = np.ulonglong(0b11111111 << 56)
         self.__EDGE_MASK_BOTTOM = np.ulonglong(0b11111111)
         self.__EDGE_MASK_LEFT = np.ulonglong(0b1000000010000000100000001000000010000000100000001000000010000000)
@@ -45,9 +46,12 @@ class BitboardMasks:
         self.__RANK_STRIDE_EQ = 8
         self.__RANK_STRIDE_SHORT = 7
         self.__FILE_STRIDE = 1
+        
+        """
         self.all_position_masks = np.array([np.ulonglong(1 << i) for i in range(64)])
         self.__all_attack_masks = self.__construct_all_attack_masks()
         self.__all_path_masks = self.__construct_all_path_masks()
+        """
     
     def __construct_all_attack_masks(self) -> dict:
         all_attack_masks = {
@@ -116,46 +120,41 @@ class BitboardMasks:
             return np.bitwise_and(interval_bits_mask, source_pos_attack_mask)
         return np.bitwise_and(interval_bits_mask, np.bitwise_and(source_pos_attack_mask, target_pos_attack_mask))
 
-    def __rook_attacks64_dynamic(self, curr_piece_pos64, blocked_attack_paths64):
-        flag_func = (lambda blocked_attack_paths64, shift_dir_func: 
-                     lambda attacks64, shift_len, blocked_attack_paths64, shift_dir_func: 
-                     np.bitwise_and(shift_dir_func(attacks64, np.uint(shift_len)), blocked_attack_paths64) == 0)
-    
-        file_attacks_left = self.conditional_bit_shift(curr_piece_pos_mask=curr_piece_pos64,
-                                                           shift_len=self.__FILE_STRIDE,
-                                                           flag_func=flag_func(blocked_attack_paths64=blocked_attack_paths64,
-                                                                               shift_dir_func=np.left_shift),
-                                                           shift_func=self.helper.__bit_shift_func_delegator(np.left_shift))
+    def rook_attacks64_dynamic(self, curr_piece_pos64, blocked_attack_paths64):
+        file_attacks_left = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                       shift_len=self.__FILE_STRIDE,
+                                                       flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
+                                                                                                                   compared_const=blocked_attack_paths64,
+                                                                                                                   shift_dir_func=np.left_shift,
+                                                                                                                   shift_len=self.__FILE_STRIDE),
+                                                       shift_func=self.helper.bit_shift_func_delegator(np.left_shift))
         
-        file_attacks_right = self.conditional_bit_shift(curr_piece_pos_mask=curr_piece_pos64,
-                                                            shift_len=self.__FILE_STRIDE,
-                                                            flag_func=lambda mask, shift_len: {np.bitwise_and(np.left_shift(mask, np.uint(shift_len)), 
-                                                                                                             blocked_attack_paths64) == 0},
-                                                            shift_func=self.helper__bit_shift_func_delegator(np.right_shift))
+        file_attacks_right = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                        shift_len=self.__FILE_STRIDE,
+                                                        flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
+                                                                                                                    compared_const=blocked_attack_paths64,
+                                                                                                                    shift_dir_func=np.right_shift,
+                                                                                                                    shift_len=self.__FILE_STRIDE),
+                                                        shift_func=self.helper.bit_shift_func_delegator(np.right_shift))
         
+        rank_attacks_top = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                      shift_len=self.__RANK_STRIDE_EQ,
+                                                      flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
+                                                                                                                  compared_const=blocked_attack_paths64,
+                                                                                                                  shift_dir_func=np.left_shift,
+                                                                                                                  shift_len=self.__RANK_STRIDE_EQ),
+                                                      shift_func=self.helper.bit_shift_func_delegator(np.left_shift))
         
-        rank_attacks_top = self.conditional_bit_shift(curr_piece_pos_mask=curr_piece_pos64,
-                               shift_len=self.__RANK_STRIDE_EQ,
-                               flag_func=lambda mask, shift_len: {np.bitwise_and(np.left_shift(mask, np.uint(shift_len)), 
-                                                                                 blocked_attack_paths64) == 0},
-                               shift_func=self.helper__bit_shift_func_delegator(np.left_shift))
-        
-        rank_attacks_bottom = self.conditional_bit_shift(curr_piece_pos_mask=curr_piece_pos64,
-                                  shift_len=self.__RANK_STRIDE_EQ,
-                                  flag_func=lambda mask, shift_len: {np.bitwise_and(np.left_shift(mask, np.uint(shift_len)), 
-                                                                                 blocked_attack_paths64) == 0},
-                                  shift_func=self.helper__bit_shift_func_delegator(np.left_shift))
+        rank_attacks_bottom = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                         shift_len=self.__RANK_STRIDE_EQ,
+                                                         flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
+                                                                                                                     compared_const=blocked_attack_paths64,
+                                                                                                                     shift_dir_func=np.right_shift,
+                                                                                                                     shift_len=self.__RANK_STRIDE_EQ),
+                                                         shift_func=self.helper.bit_shift_func_delegator(np.right_shift))
 
         return np.bitwise_or(np.bitwise_or(file_attacks_left, file_attacks_right),
                              np.bitwise_or(rank_attacks_top, rank_attacks_bottom))
-    
-    def queen_path_blocked_attack_mask(self, piece_position_mask, unblocked_attack_mask):
-        unblocked_rook = np.bitwise_and(self.get_attack_mask_of_type(None, Pieces.ROOK, pos_mask=piece_position_mask)[0],
-                                        unblocked_attack_mask)
-        unblocked_bishop = np.bitwise_and(self.get_attack_mask_of_type(None, Pieces.BISHOP, pos_mask=piece_position_mask)[0],
-                                          unblocked_attack_mask)
-        return np.bitwise_or(self.bishop_path_blocked_attack_mask(piece_position_mask, unblocked_bishop), 
-                             self.__rook_attacks64_dynamic(piece_position_mask, unblocked_rook))
     
     def bishop_path_blocked_attack_mask(self, piece_position_mask, unblocked_attack_mask) -> np.ulonglong:
         larger_stride = 9
@@ -190,8 +189,16 @@ class BitboardMasks:
                                             np.bitwise_or(south_east_diagonal_mask,
                                                           south_west_diagonal_mask)),
                               org_piece_position_mask)
+    
+    def queen_path_blocked_attack_mask(self, piece_position_mask, unblocked_attack_mask):
+        unblocked_rook = np.bitwise_and(self.get_attack_mask_of_type(None, Pieces.ROOK, pos_mask=piece_position_mask)[0],
+                                        unblocked_attack_mask)
+        unblocked_bishop = np.bitwise_and(self.get_attack_mask_of_type(None, Pieces.BISHOP, pos_mask=piece_position_mask)[0],
+                                          unblocked_attack_mask)
+        return np.bitwise_or(self.bishop_path_blocked_attack_mask(piece_position_mask, unblocked_bishop), 
+                             self.__rook_attacks64_dynamic(piece_position_mask, unblocked_rook))
 
-    def __pawn_movements64_static(self, curr_piece_pos64, color) -> np.ulonglong:
+    def pawn_movements64_static(self, curr_piece_pos64, color) -> np.ulonglong:
         if color:
             if np.bitwise_and(curr_piece_pos64, self.__W_EN_PASSANT_MASK) > 0:
                 
@@ -207,7 +214,7 @@ class BitboardMasks:
         
         return np.right_shift(curr_piece_pos64, np.uint(self.__RANK_STRIDE_EQ))
     
-    def __pawn_attacks64_static(self, current_piece_pos64, color) -> np.ulonglong:
+    def pawn_attacks64_static(self, current_piece_pos64, color) -> np.ulonglong:
         if color:
             if np.bitwise_and(current_piece_pos64, self.__EDGE_MASK_TOP) > 0:
                 return np.ulonglong(0)
@@ -229,67 +236,67 @@ class BitboardMasks:
         return np.bitwise_or(np.right_shift(current_piece_pos64, np.uint(self.__RANK_STRIDE_LONG)), 
                              np.right_shift(current_piece_pos64, np.uint(self.__RANK_STRIDE_SHORT)))
     
-    def __rook_attacks64_static(self, curr_piece_pos64) -> np.ulonglong:  
-        file_attacks_left = self.helper.conditional_bit_shift(curr_piece_pos_mask=curr_piece_pos64,
-                                                           shift_len=self.__FILE_STRIDE,
-                                                           flag_func=self.helper.__attacks64_flag_func_delegator(op=operator.eq,
+    def rook_attacks64_static(self, curr_piece_pos64) -> np.ulonglong:  
+        file_attacks_left = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                              shift_len=self.__FILE_STRIDE,
+                                                              flag_func=self.helper.attacks64_flag_func_delegator(op=operator.eq,
                                                                                                                  compared_const=self.__EDGE_MASK_LEFT),
-                                                           shift_func=self.helper.__bit_shift_func_delegator(np.left_shift))
+                                                              shift_func=self.helper.bit_shift_func_delegator(np.left_shift))
         
-        file_attacks_right = self.helper.conditional_bit_shift(curr_piece_pos_mask=curr_piece_pos64,
-                                                            shift_len=self.__FILE_STRIDE,
-                                                            flag_func=self.helper.__attacks64_flag_func_delegator(op=operator.eq,
+        file_attacks_right = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                               shift_len=self.__FILE_STRIDE,
+                                                               flag_func=self.helper.attacks64_flag_func_delegator(op=operator.eq,
                                                                                                                   compared_const=self.__EDGE_MASK_RIGHT),
-                                                            shift_func=self.helper.__bit_shift_func_delegator(np.right_shift))
+                                                               shift_func=self.helper.bit_shift_func_delegator(np.right_shift))
          
-        rank_attacks_up = self.helper.conditional_bit_shift(curr_piece_pos_mask=curr_piece_pos64,
-                                                           shift_len=self.__RANK_STRIDE_EQ,
-                                                           flag_func=self.helper.__attacks64_flag_func_delegator(op=operator.eq,
+        rank_attacks_up = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                            shift_len=self.__RANK_STRIDE_EQ,
+                                                            flag_func=self.helper.attacks64_flag_func_delegator(op=operator.eq,
                                                                                                                  compared_const=self.__EDGE_MASK_TOP),
-                                                           shift_func=self.helper.__bit_shift_func_delegator(np.left_shift))
+                                                            shift_func=self.helper.bit_shift_func_delegator(np.left_shift))
         
-        rank_attacks_down = self.helper.conditional_bit_shift(curr_piece_pos_mask=curr_piece_pos64,
-                                                             shift_len=self.__RANK_STRIDE_EQ,
-                                                             flag_func=self.helper.__attacks64_flag_func_delegator(op=operator.eq,
+        rank_attacks_down = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                              shift_len=self.__RANK_STRIDE_EQ,
+                                                              flag_func=self.helper.attacks64_flag_func_delegator(op=operator.eq,
                                                                                                                    compared_const=self.__EDGE_MASK_BOTTOM),
-                                                             shift_func=self.helper.__bit_shift_func_delegator(np.right_shift))
+                                                              shift_func=self.helper.bit_shift_func_delegator(np.right_shift))
         
         return np.bitwise_or(np.bitwise_or(file_attacks_left, file_attacks_right),
                              np.bitwise_or(rank_attacks_up, rank_attacks_down))      
     
-    def __bishop_attacks64_static(self, curr_piece_pos64) -> np.ulonglong:
-        north_east_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos_mask=curr_piece_pos64,
+    def bishop_attacks64_static(self, curr_piece_pos64) -> np.ulonglong:
+        north_east_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
                                                                         shift_len=self.__RANK_STRIDE_SHORT,
-                                                                        flag_func=self.helper.__attacks64_flag_func_delegator(op=operator.eq,
+                                                                        flag_func=self.helper.attacks64_flag_func_delegator(op=operator.eq,
                                                                                                                            compared_const=np.bitwise_or(self.__EDGE_MASK_TOP,
                                                                                                                                                         self.__EDGE_MASK_RIGHT)),
-                                                                        shift_func=self.helper.__bit_shift_func_delegator(np.left_shift))
+                                                                        shift_func=self.helper.bit_shift_func_delegator(np.left_shift))
         
-        north_west_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos_mask=curr_piece_pos64,
+        north_west_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
                                                                         shift_len=self.__RANK_STRIDE_LONG,
-                                                                        flag_func=self.helper.__attacks64_flag_func_delegator(op=operator.eq,
+                                                                        flag_func=self.helper.attacks64_flag_func_delegator(op=operator.eq,
                                                                                                                            compared_const=np.bitwise_or(self.__EDGE_MASK_TOP,
                                                                                                                                                         self.__EDGE_MASK_LEFT)),
-                                                                        shift_func=self.helper.__bit_shift_func_delegator(np.left_shift))
+                                                                        shift_func=self.helper.bit_shift_func_delegator(np.left_shift))
         
-        south_east_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos_mask=curr_piece_pos64,
+        south_east_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
                                                                         shift_len=self.__RANK_STRIDE_LONG,
-                                                                        flag_func=self.helper.__attacks64_flag_func_delegator(op=operator.eq,
+                                                                        flag_func=self.helper.attacks64_flag_func_delegator(op=operator.eq,
                                                                                                                            compared_const=np.bitwise_or(self.__EDGE_MASK_BOTTOM,
                                                                                                                                                         self.__EDGE_MASK_RIGHT)),
-                                                                        shift_func=self.helper.__bit_shift_func_delegator(np.right_shift))
+                                                                        shift_func=self.helper.bit_shift_func_delegator(np.right_shift))
         
-        south_west_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos_mask=curr_piece_pos64,
-                                                                        shift_len=self.__RANK_STRIDE_LONG,
-                                                                        flag_func=self.helper.__attacks64_flag_func_delegator(op=operator.eq,
+        south_west_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                                        shift_len=self.__RANK_STRIDE_SHORT,
+                                                                        flag_func=self.helper.attacks64_flag_func_delegator(op=operator.eq,
                                                                                                                            compared_const=np.bitwise_or(self.__EDGE_MASK_BOTTOM,
-                                                                                                                                                        self.__EDGE_MASK_RIGHT)),
-                                                                        shift_func=self.helper.__bit_shift_func_delegator(np.right_shift))
+                                                                                                                                                        self.__EDGE_MASK_LEFT)),
+                                                                        shift_func=self.helper.bit_shift_func_delegator(np.right_shift))
         
         return np.bitwise_or(np.bitwise_or(north_east_diagonal_attacks, north_west_diagonal_attacks),
                              np.bitwise_or(south_east_diagonal_attacks, south_west_diagonal_attacks))
     
-    def __knight_attack_mask(self, piece_position_mask) -> np.ulonglong:
+    def knight_attack_mask(self, piece_position_mask) -> np.ulonglong:
         stride_count = 3
         file_stride = 1
         rank_stride = 8
@@ -349,11 +356,16 @@ class BitboardMasks:
         return np.bitwise_or(np.bitwise_or(west_file_attack_mask, east_file_attack_mask),
                              np.bitwise_or(north_rank_attack_mask, south_rank_attack_mask))
     
-    def __queen_attacks64_static(self, piece_position_mask) -> np.ulonglong:
+    def queen_attacks64_static(self, piece_position_mask) -> np.ulonglong:
         return np.bitwise_or(self.__rook_attacks64_static(piece_position_mask), 
                              self.__bishop_attack_mask(piece_position_mask))
     
-    def __king_attacks64_static(self, curr_piece_pos64) -> np.ulonglong:
+    def king_attacks64_static(self, curr_piece_pos64) -> np.ulonglong:
+        file_attack_left, file_attack_right = np.ulonglong(0), np.ulonglong(0)
+        rank_attack_top, rank_attack_bottom = np.ulonglong(0), np.ulonglong(0)
+        north_east_diagonal_attack, north_west_diagonal_attack = np.ulonglong(0), np.ulonglong(0)
+        south_east_diagonal_attack, south_west_diagonal_attack = np.ulonglong(0), np.ulonglong(0) 
+        
         if np.bitwise_and(curr_piece_pos64, self.__EDGE_MASK_LEFT) == 0:
             file_attack_left = np.left_shift(curr_piece_pos64, np.uint(self.__FILE_STRIDE))
         if np.bitwise_and(curr_piece_pos64, self.__EDGE_MASK_RIGHT) == 0:

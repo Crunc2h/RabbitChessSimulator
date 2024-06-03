@@ -59,7 +59,7 @@ class Positions:
             Positions.START_POS["B_Attacks_mask"] = np.bitwise_or(Positions.START_POS["B_Attacks_mask"], masks_test.get_attack_mask_of_type(idx, Pieces.KNIGHT)[0])
         for idx in init_b_k_idx:
             Positions.START_POS["B_Attacks_mask"] = np.bitwise_or(Positions.START_POS["B_Attacks_mask"], masks_test.get_attack_mask_of_type(idx, Pieces.KING)[0])
-
+        """
 
 
         
@@ -72,7 +72,7 @@ class Positions:
             Positions.START_POS["B_Pieces_mask"] = Positions.START_POS["B_Pieces_mask"] | piece_type_mask
         Positions.START_POS["All_Pieces_mask"] = Positions.START_POS["W_Pieces_mask"] | Positions.START_POS["B_Pieces_mask"]
 
-        """
+    
         
         return Positions.START_POS
 
