@@ -36,7 +36,8 @@ class BitboardStorageHelper:
     def attacks64_dynamic_flag_func_delegator(self, op, compared_const, shift_dir_func, shift_len):
         return lambda value_to_compare: op(np.bitwise_and(shift_dir_func(value_to_compare, np.uint(shift_len)), compared_const), 0)
     
-    
+    def none_or_value(val):
+         return np.ulonglong(0) if not val else val 
          
 
     def __curr_piece_attacks_of_type(self, piece_type, curr_piece_pos64):

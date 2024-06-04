@@ -304,105 +304,84 @@ class BitboardMasks:
         return np.bitwise_or(np.bitwise_or(north_east_diagonal_attacks, north_west_diagonal_attacks),
                              np.bitwise_or(south_east_diagonal_attacks, south_west_diagonal_attacks))
     
-    def knight_attacks64_static(self, curr_piece_pos64) -> np.ulonglong:
-        west_file_attack_mask = np.ulonglong(0)
-        east_file_attack_mask = np.ulonglong(0)
-        north_rank_attack_mask = np.ulonglong(0)
-        south_rank_attack_mask = np.ulonglong(0)
-        
-        west_file_attack_mask = self.knight_strider(curr_piece_pos64=curr_piece_pos64,
+    def knight_attacks64_static(self, curr_piece_pos64) -> np.ulonglong: 
+        west_file_attack_mask = self.__stride_for_knight_attacks64_static(curr_piece_pos64=curr_piece_pos64,
                                                     edge_mask64=self.__EDGE_MASK_LEFT,
                                                     shift_func=np.left_shift,
                                                     shift_len=self.__FILE_STRIDE,
-                                                    file_or_rank=False)
-        
-        
-        east_file_attack_mask = self.knight_strider(curr_piece_pos64=curr_piece_pos64,
+                                                    file_or_rank=True)
+
+        east_file_attack_mask = self.__stride_for_knight_attacks64_static(curr_piece_pos64=curr_piece_pos64,
                                                     edge_mask64=self.__EDGE_MASK_RIGHT,
                                                     shift_func=np.right_shift,
                                                     shift_len=self.__FILE_STRIDE,
-                                                    file_or_rank=False)
-        north_rank_attack_mask = self.knight_strider(curr_piece_pos64=curr_piece_pos64,
+                                                    file_or_rank=True)
+        
+        north_rank_attack_mask = self.__stride_for_knight_attacks64_static(curr_piece_pos64=curr_piece_pos64,
                                                     edge_mask64=self.__EDGE_MASK_TOP,
                                                     shift_func=np.left_shift,
                                                     shift_len=self.__RANK_STRIDE_EQ,
-                                                    file_or_rank=True)
-        south_rank_attack_mask = self.knight_strider(curr_piece_pos64=curr_piece_pos64,
+                                                    file_or_rank=False)
+
+        south_rank_attack_mask = self.__stride_for_knight_attacks64_static(curr_piece_pos64=curr_piece_pos64,
                                                     edge_mask64=self.__EDGE_MASK_BOTTOM,
                                                     shift_func=np.right_shift,
                                                     shift_len=self.__RANK_STRIDE_EQ,
-                                                    file_or_rank=True)
+                                                    file_or_rank=False)
+
+        west_file_attack_mask = np.ulonglong(0) if west_file_attack_mask == None else west_file_attack_mask
+        east_file_attack_mask = np.ulonglong(0) if east_file_attack_mask == None else east_file_attack_mask
+        north_rank_attack_mask = np.ulonglong(0) if north_rank_attack_mask == None else north_rank_attack_mask
+        south_rank_attack_mask = np.ulonglong(0) if south_rank_attack_mask == None else south_rank_attack_mask
              
         return np.bitwise_or(np.bitwise_or(west_file_attack_mask, east_file_attack_mask),
                              np.bitwise_or(north_rank_attack_mask, south_rank_attack_mask))
     
-    def knight_strider(self,
+    def __stride_for_knight_attacks64_static(self,
                        curr_piece_pos64,
                        edge_mask64,
                        shift_func,
                        shift_len,
                        file_or_rank,
-                       knight_stride_range=3):
-        
+                       knight_stride_range=2):
         if np.bitwise_and(curr_piece_pos64, edge_mask64) == 0:
             attacks64 = curr_piece_pos64
-            
+        
             for i in range(knight_stride_range):
                 attacks64 = shift_func(attacks64, np.uint(shift_len))
-                
+        
                 if np.bitwise_and(attacks64, edge_mask64) > 0 and i < knight_stride_range - 1:
                     attacks64 = np.ulonglong(0)
                     break     
-                
-                if i == knight_stride_range - 1:
-                    from bitboard_printer import BitboardPrinter
-                    print("=======before assigning")
-                    BitboardPrinter.print(attacks64)
-                    
-                    
+                if i == knight_stride_range - 1:              
                     if file_or_rank:
                         
-                        assigned_attacks64 = self.__assign_knight_attack64_static(attacks64,
+                        assigned_attacks64 = self.__assign_adjacent_knight_attacks64_static(attacks64,
                                                                               edge_mask64_pos=self.__EDGE_MASK_TOP,
                                                                               edge_mask64_neg=self.__EDGE_MASK_BOTTOM,
                                                                               shift_len=self.__RANK_STRIDE_EQ)
-                        print("=========after assigning file squaress")
-                        BitboardPrinter.print(assigned_attacks64)
                     else:
-                        assigned_attacks64 = self.__assign_knight_attack64_static(attacks64,
-                                                                                              edge_mask64_pos=self.__EDGE_MASK_RIGHT,
-                                                                                              edge_mask64_neg=self.__EDGE_MASK_LEFT,
-                                                                                              shift_len=self.__RANK_STRIDE_EQ)
-                        print("========after assigning rank squares")
-                        BitboardPrinter.print(assigned_attacks64)
-                    final_attacks64 = np.bitwise_or(assigned_attacks64, attacks64)
-        return final_attacks64
+                        assigned_attacks64 = self.__assign_adjacent_knight_attacks64_static(attacks64,
+                                                                                  edge_mask64_pos=self.__EDGE_MASK_LEFT,
+                                                                                  edge_mask64_neg=self.__EDGE_MASK_RIGHT,
+                                                                                              shift_len=self.__FILE_STRIDE)
+                    return assigned_attacks64
     
-    
-    def __assign_knight_attack64_static(self, 
+    def __assign_adjacent_knight_attacks64_static(self, 
                                   attacks64,
                                   shift_len,
                                   edge_mask64_pos,
                                   edge_mask64_neg) -> np.ulonglong: 
-        
         if np.bitwise_and(attacks64, np.bitwise_or(edge_mask64_pos, edge_mask64_neg)) == 0:
-            
             attacks64 = np.bitwise_or(np.left_shift(attacks64, np.uint(shift_len)),
-                                      np.right_shift(attacks64, np.uint(shift_len)))
+                                          np.right_shift(attacks64, np.uint(shift_len)))
             return attacks64
-        
         elif np.bitwise_and(attacks64, edge_mask64_pos) == 0:
             attacks64 = np.left_shift(attacks64, np.uint(shift_len))
             return attacks64
-        
         attacks64 = np.right_shift(attacks64, np.uint(shift_len))
         return attacks64
-
-
-
-
-
-
+    
     def queen_attacks64_static(self, piece_position_mask) -> np.ulonglong:
         return np.bitwise_or(self.__rook_attacks64_static(piece_position_mask), 
                              self.__bishop_attack_mask(piece_position_mask))
