@@ -1,6 +1,5 @@
 """
-def get_piece_position_mask(self, square_idx) -> np.ulonglong:
-        return np.ulonglong(1 << square_idx)
+
     
     def extract_individual_position_masks(self, position_masks):
         return np.array(list(filter(lambda position_mask:np.bitwise_and(position_mask, position_masks), self.all_position_masks)))

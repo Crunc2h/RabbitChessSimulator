@@ -7,16 +7,13 @@ from static.squares import Squares
 from static.positions import Positions
 from static.pieces import Pieces
 from move_validator import MoveValidator
-from bitboard_storage_helper import BitboardStorageHelper
+from bitboard_helper import BitboardStorageHelper
 helper = BitboardStorageHelper()
 test_board = Bitboard(Positions.start_pos())
 masks_obj = BitboardMasks(helper_obj=helper)
 
-sqr_e4 = helper.get_piece_position_mask(Squares.e3["idx"])
-rook_blocked = np.bitwise_and(masks_obj.rook_attacks64_static(sqr_e4), np.invert(test_board.data["All_Pieces_mask"]))
-BitboardPrinter.print(test_board.data["All_Pieces_mask"])
-BitboardPrinter.print(rook_blocked)
-BitboardPrinter.print(masks_obj.rook_attacks64_dynamic(sqr_e4, rook_blocked))
+sqr_e4 = helper.get_piece_position_mask(Squares.d5["idx"])
+rook_blocked = np.bitwise_and(masks_obj.knight_attacks64_static(sqr_e4), np.invert(test_board.data["All_Pieces_mask"]))
 
 
 

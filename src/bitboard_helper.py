@@ -35,6 +35,8 @@ class BitboardStorageHelper:
     
     def attacks64_dynamic_flag_func_delegator(self, op, compared_const, shift_dir_func, shift_len):
         return lambda value_to_compare: op(np.bitwise_and(shift_dir_func(value_to_compare, np.uint(shift_len)), compared_const), 0)
+    
+    
          
 
     def __curr_piece_attacks_of_type(self, piece_type, curr_piece_pos64):
@@ -53,37 +55,6 @@ class BitboardStorageHelper:
         elif piece_type == Pieces.KING:
             return self.__king_attack_mask(curr_piece_pos64)
         raise ValueError("Invalid piece type passed to the mask getter!")
-    
-
-    def __assign_knight_file_mask(self, file_attack_mask) -> np.ulonglong:
-        rank_stride = 8
-    
-        if np.bitwise_and(file_attack_mask, np.bitwise_or(self.__EDGE_MASK_TOP, self.__EDGE_MASK_BOTTOM)) == 0:
-            file_attack_mask = np.bitwise_or(np.left_shift(file_attack_mask, np.uint(rank_stride)),
-                                             np.right_shift(file_attack_mask, np.uint(rank_stride)))
-            return file_attack_mask
-        elif np.bitwise_and(file_attack_mask, self.__EDGE_MASK_TOP) == 0:
-            file_attack_mask = np.left_shift(file_attack_mask, np.uint(rank_stride))
-            
-            return file_attack_mask
-        file_attack_mask = np.right_shift(file_attack_mask, np.uint(rank_stride))
-        
-        return file_attack_mask
-
-    def __assign_knight_rank_mask(self, rank_attack_mask) -> np.ulonglong:
-        file_stride = 1
-        
-        if np.bitwise_and(rank_attack_mask, np.bitwise_or(self.__EDGE_MASK_LEFT, self.__EDGE_MASK_RIGHT)) == 0:
-            rank_attack_mask = np.bitwise_or(np.left_shift(rank_attack_mask, np.uint(file_stride)),
-                                             np.right_shift(rank_attack_mask, np.uint(file_stride)))
-            return rank_attack_mask
-        elif np.bitwise_and(rank_attack_mask, self.__EDGE_MASK_LEFT) == 0:
-            rank_attack_mask = np.left_shift(rank_attack_mask, np.uint(file_stride))
-            
-            return rank_attack_mask
-        rank_attack_mask = np.right_shift(rank_attack_mask, np.uint(file_stride))
-        
-        return rank_attack_mask
     
     def get_piece_position_mask(self, square_idx) -> np.ulonglong:
         return np.ulonglong(1 << square_idx)
