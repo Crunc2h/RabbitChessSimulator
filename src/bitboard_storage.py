@@ -150,9 +150,9 @@ class BitboardMasks:
                 if key != Pieces.W_PAWN and key != Pieces.B_PAWN:
                     all_attack_masks[key][curr_piece_pos64] = self.__piece_type_to_piece_attacks64(key, curr_piece_pos64)
                 else:
-                    pawn_movement_mask, pawn_attack_mask = self.__piece_type_to_piece_attacks64(key, curr_piece_pos64)
-                    all_attack_masks[key]["move"][curr_piece_pos64] = pawn_movement_mask
-                    all_attack_masks[key]["attack"][curr_piece_pos64] = pawn_attack_mask 
+                    pawn_attacks64, pawn_movements64 = self.__piece_type_to_piece_attacks64(key, curr_piece_pos64)
+                    all_attack_masks[key]["move"][curr_piece_pos64] = pawn_movements64
+                    all_attack_masks[key]["attack"][curr_piece_pos64] = pawn_attacks64 
      
         return all_attack_masks
     
