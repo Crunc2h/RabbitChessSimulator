@@ -436,11 +436,11 @@ class BitboardMasks:
         if np.bitwise_and(curr_piece_pos64, np.bitwise_or(self.__EDGE_MASK_TOP, self.__EDGE_MASK_RIGHT)) == 0:
             north_east_diagonal_attack = np.left_shift(curr_piece_pos64, np.uint(self.__RANK_STRIDE_SHORT))
         if np.bitwise_and(curr_piece_pos64, np.bitwise_or(self.__EDGE_MASK_TOP, self.__EDGE_MASK_LEFT)) == 0:
-            north_west_diagonal_attack = np.left_shift(curr_piece_pos64, np.uint(self.__RANK_STRIDE_SHORT)) 
+            north_west_diagonal_attack = np.left_shift(curr_piece_pos64, np.uint(self.__RANK_STRIDE_LONG)) 
         if np.bitwise_and(curr_piece_pos64, np.bitwise_or(self.__EDGE_MASK_BOTTOM, self.__EDGE_MASK_LEFT)) == 0:
             south_west_diagonal_attack = np.right_shift(curr_piece_pos64, np.uint(self.__RANK_STRIDE_SHORT))
         if np.bitwise_and(curr_piece_pos64, np.bitwise_or(self.__EDGE_MASK_BOTTOM, self.__EDGE_MASK_RIGHT)) == 0:
-            south_east_diagonal_attack = np.right_shift(curr_piece_pos64, np.uint(self.__RANK_STRIDE_SHORT))
+            south_east_diagonal_attack = np.right_shift(curr_piece_pos64, np.uint(self.__RANK_STRIDE_LONG))
 
         return np.bitwise_or(np.bitwise_or(np.bitwise_or(file_attack_left, file_attack_right),
                                            np.bitwise_or(rank_attack_top, rank_attack_bottom)),

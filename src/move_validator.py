@@ -128,7 +128,8 @@ class MoveValidator:
         
         adjacent_sqr_mask = self.__bb_masks.get_all_adj_squares64_of_idx()[from_square_idx]
         is_move_to_sqr_adjacent = np.bitwise_and(adjacent_sqr_mask, to_sqr_piece_pos64) > 0
-        if is_move_to_sqr_adjacent is False and piece_type != Pieces.KNIGHT:
+
+        if is_move_to_sqr_adjacent == False and piece_type != Pieces.KNIGHT:
             piece_movement_path = self.__bb_masks.get_all_piece_paths64_static()[piece_type][(from_square_idx, to_square_idx)]
             if np.bitwise_and(piece_movement_path, board_data["All_Pieces_mask"]) > 0:
                 raise Exception("There is a piece obstructing the path towards target square!")

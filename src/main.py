@@ -83,23 +83,19 @@ while True:
         BitboardPrinter.print(test_board.data["B_Pieces_arr"][4])
         print("========BLACK PAWNS======")
         BitboardPrinter.print(test_board.data["B_Pieces_arr"][5])
-
         print("========WHITE PIECES========")
         BitboardPrinter.print(test_board.data["W_Pieces_mask"])
-
         print("========BLACK PIECES========")
         BitboardPrinter.print(test_board.data["B_Pieces_mask"])
-
-
         print(f"{'===== Check! =====' if is_check else ''}")
         print(f"========ALL PIECES========{'   Whites Turn' if np.bitwise_and(np.ulonglong(0b1), test_board.data['side_to_move']) > 0 else '   Blacks Turn'}")
         BitboardPrinter.print(test_board.data, full_display=True)
-
         squares = input("Make a move:").lower().split()
         is_check = transform_test(validator, test_board)
     except Exception as ex:
         print(str(ex))
         time.sleep(2)
+
 
 
 
