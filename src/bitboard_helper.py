@@ -7,12 +7,18 @@ class BitboardStorageHelper:
                               curr_piece_pos64,
                               shift_len,
                               flag_func,
-                              shift_func):
+                              shift_func,
+                              dynamic_edges=False,
+                              all_edges_mask=None):
             
             original_bit = curr_piece_pos64
             mask_to_update = curr_piece_pos64
             
             while flag_func(curr_piece_pos64):
+                curr_piece_pos64 = shift_func(curr_piece_pos64, shift_len)
+                mask_to_update = np.bitwise_or(mask_to_update, curr_piece_pos64)
+            
+            if dynamic_edges and np.bitwise_and(curr_piece_pos64, all_edges_mask) == 0:
                 curr_piece_pos64 = shift_func(curr_piece_pos64, shift_len)
                 mask_to_update = np.bitwise_or(mask_to_update, curr_piece_pos64)
             
