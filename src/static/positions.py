@@ -15,6 +15,7 @@ class Positions:
                                  np.ulonglong(0b00001000),
                                  np.ulonglong(0b1111111100000000)
                                  ]),
+                                 
         "W_Attacks64_static": np.ulonglong(0),
         "B_Pieces_arr":np.array([
                                  np.ulonglong(0b1000000100000000000000000000000000000000000000000000000000000000),
