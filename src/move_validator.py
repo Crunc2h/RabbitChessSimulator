@@ -40,7 +40,7 @@ class MoveValidator:
             raise Exception("There isn't a piece at the specified source square!")
         if ((side and np.bitwise_and(from_sqr_piece_pos_mask, board_data["W_Pieces_mask"]) == 0)
              or (not side and np.bitwise_and(from_sqr_piece_pos_mask, board_data["B_Pieces_mask"]) == 0)):
-            raise Exception("That piece at the source square belongs to the opponent!")
+            raise Exception("The piece at the source square belongs to the opponent!")
         if ((side and np.bitwise_and(to_sqr_piece_pos_mask, board_data["W_Pieces_mask"]) > 0)
              or (not side and np.bitwise_and(to_sqr_piece_pos_mask, board_data["B_Pieces_mask"]) > 0)):
             raise Exception("Another one of your pieces already occupies target square!")
@@ -59,9 +59,8 @@ class MoveValidator:
             raise Exception("Illegal move!")
         
         if pawn_movement != None:
-            if ((side and np.bitwise_and(to_sqr_piece_pos_mask, board_data["B_Pieces_mask"]) > 0) 
-            or (not side and np.bitwise_and(to_sqr_piece_pos_mask, board_data["W_Pieces_mask"]) > 0)):
-                raise Exception("Pawn cannot move to a square already occupied by an enemy piece!")
+            if np.bitwise_and(to_sqr_piece_pos_mask, board_data["All_Pieces_mask"]) > 0:
+                raise Exception("Pawn cannot move to a square already occupied by another piece!")
         
         adjacent_sqr_mask = self.__bb_masks.get_attack_mask_of_type(from_square_idx, Pieces.KING)
         is_move_to_sqr_adjacent = np.bitwise_and(adjacent_sqr_mask, to_sqr_piece_pos_mask) > 0

@@ -34,26 +34,7 @@ class BitboardStorageHelper:
         return lambda value_to_compare: op(np.bitwise_and(value_to_compare, compared_const), 0)
     
     def attacks64_dynamic_flag_func_delegator(self, op, compared_const, shift_dir_func, shift_len):
-        return lambda value_to_compare: op(np.bitwise_and(shift_dir_func(value_to_compare, np.uint(shift_len)), compared_const), 0)
-
-         
-
-    def __curr_piece_attacks_of_type(self, piece_type, curr_piece_pos64):
-        if piece_type == Pieces.W_PAWN:
-            return self.__pawn_attack_mask(curr_piece_pos64, True), self.__pawn_movement_mask(curr_piece_pos64, True)
-        elif piece_type == Pieces.B_PAWN:
-            return self.__pawn_attack_mask(curr_piece_pos64, False), self.__pawn_movement_mask(curr_piece_pos64, False)
-        elif piece_type == Pieces.ROOK:
-            return self.__rook_attack_mask(curr_piece_pos64)
-        elif piece_type == Pieces.KNIGHT:
-            return self.__knight_attack_mask(curr_piece_pos64)
-        elif piece_type == Pieces.BISHOP:
-            return self.__bishop_attack_mask(curr_piece_pos64)
-        elif piece_type == Pieces.QUEEN:
-            return self.__queen_attack_mask(curr_piece_pos64)
-        elif piece_type == Pieces.KING:
-            return self.__king_attack_mask(curr_piece_pos64)
-        raise ValueError("Invalid piece type passed to the mask getter!")
+        return lambda value_to_compare: op(np.bitwise_and(shift_dir_func(value_to_compare, np.uint(shift_len)), compared_const), 0)   
     
-    def get_piece_position_mask(self, square_idx) -> np.ulonglong:
+    def get_piece_position64(self, square_idx) -> np.ulonglong:
         return np.ulonglong(1 << square_idx)
