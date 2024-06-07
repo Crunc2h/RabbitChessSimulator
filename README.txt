@@ -1,5 +1,4 @@
 # A custom, compact chess simulation made in Python
-
 ## Motivation
 - I have recently gotten into ML and am especially interested in applications of temporal-RL, in that regard, Google DeepMind's Alpha Zero piqued my interest [(for reading)](https://deepmind.google/discover/blog/alphazero-shedding-new-light-on-chess-shogi-and-go/). I wanted
 to create my own CDNN for chess so here I am, working on a chess simulation.
