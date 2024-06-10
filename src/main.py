@@ -55,7 +55,7 @@ helper = BitboardStorageHelper()
 test_board = Bitboard(Positions.start_pos())
 masks_obj = BitboardMasks(helper_obj=helper)
 validator = MoveValidator(bb_masks_obj=masks_obj)
-# is_capture, is_check, updated_all_pieces_pos64,  from_sqr_piece_pos64, to_sqr_piece_pos64,
+
 is_check = False
 while True:
     try:

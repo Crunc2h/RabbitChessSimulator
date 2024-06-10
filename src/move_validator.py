@@ -114,10 +114,12 @@ class MoveValidator:
                                                 self.__bb_masks.get_all_attacks64_static()[piece_type]["attack"][from_sqr_piece_pos64])
             is_pawn_movement = np.bitwise_and(pawn_movements64, to_sqr_piece_pos64) > 0
             if is_pawn_movement:
-                from_sqr_piece_attacks64 = pawn_movements64
                 if np.bitwise_and(to_sqr_piece_pos64, board_data["All_Pieces_mask"]) > 0:
                     raise Exception("Pawn cannot move to a square already occupied by another piece!")
+                from_sqr_piece_attacks64 = pawn_movements64
             else:
+                if np.bitwise_and(to_sqr_piece_pos64, board_data["All_Pieces_mask"]) == 0:
+                    raise Exception("There is no enemy piece at the targeted square for pawn to attack!")
                 from_sqr_piece_attacks64 = pawn_attacks64
                 
             to_sqr_piece_attacks64 = self.__bb_masks.get_all_attacks64_static()[piece_type]["attack"][to_sqr_piece_pos64]
@@ -147,6 +149,7 @@ class MoveValidator:
             if np.bitwise_and(to_sqr_piece_pos64, board_data["B_Pieces_mask"]) > 0:
                 captured_piece_type_idx = self.get_piece_type_idx_from_pos_mask(to_sqr_piece_pos64, b_pieces_arr)
                 b_pieces_arr[captured_piece_type_idx] = np.bitwise_xor(to_sqr_piece_pos64, b_pieces_arr[captured_piece_type_idx])
+            
             if piece_type == Pieces.QUEEN:
                 w_pieces_arr[3] = np.bitwise_xor(w_pieces_arr[3], np.bitwise_or(from_sqr_piece_pos64, to_sqr_piece_pos64))
             elif piece_type == Pieces.BISHOP:
