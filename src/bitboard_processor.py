@@ -27,7 +27,6 @@ class BitboardProcessor:
     
     def get_piece_type_and_idx(self, side, from_sqr_piece_pos64, all_side_pieces64):
         piece_type_idx = self.get_piece_type_idx_from_pos64(from_sqr_piece_pos64, all_side_pieces64)
-        print(str(piece_type_idx))
         return self.key_map[bool(side)][piece_type_idx], piece_type_idx
     
     def get_side(board_auxiliary_info_int64):

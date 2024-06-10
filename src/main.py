@@ -63,7 +63,7 @@ while True:
     print(f"========ALL PIECES========{'   Whites Turn' if np.bitwise_and(np.ulonglong(0b1), test_board.data['castling_check_color']) > 0 else '   Blacks Turn'}")
     BitboardPrinter.print(test_board.data, full_display=True)
     
-    squares = input("Make a move:").lower().split()
+    
     
     side = bool(np.bitwise_and(np.ulonglong(1), test_board.data["castling_check_color"]))
     if side:
@@ -77,8 +77,11 @@ while True:
         side_pieces64 = test_board.data["all_b_pieces"]
         oppo_pieces64 = test_board.data["all_w_pieces"]
     
-    valid, info = validator.is_valid(from_square_idx=Squares.input_to_sqr(squares[0])["idx"], 
-                                        to_square_idx=Squares.input_to_sqr(squares[1])["idx"], 
+    valid_moves = []
+    for i in range(64):
+        for f in range(64):
+            valid, info = validator.is_valid(from_square_idx=i, 
+                                        to_square_idx=f, 
                                         side=side,
                                         all_side_pieces64_arr=side_pieces64_arr,
                                         all_oppo_pieces64_arr=oppo_pieces64_arr,
@@ -86,11 +89,29 @@ while True:
                                         all_side_pieces64=side_pieces64,
                                         all_oppo_pieces64=oppo_pieces64,
                                         en_passant_squares64=np.ulonglong(0))
-    is_check = info["check"]
-    transformer.transform_board(board=test_board,
-                                           info=info,
-                                           side_pieces64_arr=side_pieces64_arr,
-                                           oppo_pieces64_arr=oppo_pieces64_arr)
+            if valid is True:
+                valid_moves.append(f"{i}-{f}")
+    for valid_move in valid_moves:
+        print(f"- {valid_move}")
+    squares = input("Make a move:").lower().split()
+    if (f"{Squares.input_to_sqr(squares[0])['idx']}-{Squares.input_to_sqr(squares[1])['idx']}") in valid_moves:
+        valid, info = validator.is_valid(from_square_idx=Squares.input_to_sqr(squares[0])["idx"], 
+                                         to_square_idx=Squares.input_to_sqr(squares[1])["idx"], 
+                                        side=side,
+                                        all_side_pieces64_arr=side_pieces64_arr,
+                                        all_oppo_pieces64_arr=oppo_pieces64_arr,
+                                        all_pieces64=test_board.data["all_pieces"],
+                                        all_side_pieces64=side_pieces64,
+                                        all_oppo_pieces64=oppo_pieces64,
+                                        en_passant_squares64=np.ulonglong(0))                                                       
+        is_check = info["check"]
+        transformer.transform_board(board=test_board,
+                                    info=info,
+                                    side_pieces64_arr=side_pieces64_arr,
+                                    oppo_pieces64_arr=oppo_pieces64_arr)
+    else:
+        print("Invalid Move!")
+        time.sleep(2)
     
 
 
