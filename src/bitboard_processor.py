@@ -27,13 +27,11 @@ class BitboardProcessor:
     
     def get_piece_type_and_idx(self, side, from_sqr_piece_pos64, all_side_pieces64):
         piece_type_idx = self.__get_piece_type_idx_from_pos64(from_sqr_piece_pos64, all_side_pieces64)
-        return self.__board_key_to_piece_type(side, piece_type_idx), piece_type_idx
+        print(str(piece_type_idx))
+        return self.key_map[bool(side)][piece_type_idx], piece_type_idx
     
     def get_side(board_auxiliary_info_int64):
         return bool(np.bitwise_and(board_auxiliary_info_int64, np.ulonglong(0b1)))
-
-    def __board_key_to_piece_type(self, key_int, side):
-        return self.key_map[side][key_int]
     
     def __get_piece_type_idx_from_pos64(self, curr_piece_pos64, pieces_arr):
         return np.argmax(np.apply_along_axis(func1d=lambda piece_type_mask: np.bitwise_and(piece_type_mask, curr_piece_pos64) > 0,
@@ -116,9 +114,9 @@ class BitboardProcessor:
         
         if pieces_pos64.bit_count() > 0:
             pieces_pos64 = self.extract_individual_position_masks(pieces_pos64)
-            piece_attacks64_dynamic = np.array(np.apply_along_axis(func1d=lambda piece_pos64: self.__map_piece_pos_to_dynamic_attack(pieces_pos64=pieces_pos64, 
-                                                                                                                                   piece_type=piece_type,
-                                                                                                                                   empty_squares64=empty_squares64)))
+            piece_attacks64_dynamic = np.array(list(map(lambda piece_pos64: self.__map_piece_pos_to_dynamic_attack(piece_pos64=piece_pos64, 
+                                                                                                                    piece_type=piece_type,
+                                                                                                                    empty_squares64=empty_squares64), pieces_pos64)))
             piece_attacks64_dynamic = np.bitwise_or.reduce(piece_attacks64_dynamic)
         
         return piece_attacks64_dynamic
@@ -128,9 +126,9 @@ class BitboardProcessor:
         
         if pieces_pos64.bit_count() > 0:
             pieces_pos64 = self.extract_individual_position_masks(pieces_pos64)
-            piece_attacks64_static = np.array(np.apply_along_axis(func1d=lambda piece_pos64: self.__map_piece_pos_to_static_attack(pieces_pos64=pieces_pos64, 
-                                                                                                                                    piece_type=piece_type,
-                                                                                                                                    side=side)))
+            piece_attacks64_static = np.array(list(map(lambda piece_pos64: self.__map_piece_pos_to_static_attack(piece_pos64=piece_pos64, 
+                                                                                                                 piece_type=piece_type,
+                                                                                                                 side=side), pieces_pos64)))
             piece_attacks64_static = np.bitwise_or.reduce(piece_attacks64_static)
         
         return piece_attacks64_static

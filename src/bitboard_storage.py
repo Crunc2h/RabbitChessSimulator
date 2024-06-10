@@ -20,6 +20,102 @@ class BitboardMasks:
     def get_all_piece_paths64_static(self):
         return self.__all_piece_paths64_static
     
+    def rook_attacks64_dynamic(self, curr_piece_pos64, unblocked_attack_paths64) -> np.ulonglong:
+        file_attacks_left = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                              shift_len=self.__FILE_STRIDE,
+                                                              flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
+                                                                                                                          compared_const=unblocked_attack_paths64,
+                                                                                                                          shift_dir_func=np.left_shift,
+                                                                                                                          shift_len=self.__FILE_STRIDE),
+                                                              shift_func=self.helper.bit_shift_func_delegator(np.left_shift),
+                                                              dynamic_edges=True,
+                                                                all_edges_mask=self.__EDGE_MASK_OMNI)
+        
+        file_attacks_right = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                               shift_len=self.__FILE_STRIDE,
+                                                               flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
+                                                                                                                           compared_const=unblocked_attack_paths64,
+                                                                                                                           shift_dir_func=np.right_shift,
+                                                                                                                           shift_len=self.__FILE_STRIDE),
+                                                               shift_func=self.helper.bit_shift_func_delegator(np.right_shift),
+                                                               dynamic_edges=True,
+                                                                all_edges_mask=self.__EDGE_MASK_OMNI)
+        
+        rank_attacks_top = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                             shift_len=self.__RANK_STRIDE_EQ,
+                                                             flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
+                                                                                                                         compared_const=unblocked_attack_paths64,
+                                                                                                                         shift_dir_func=np.left_shift,
+                                                                                                                         shift_len=self.__RANK_STRIDE_EQ),
+                                                             shift_func=self.helper.bit_shift_func_delegator(np.left_shift),
+                                                             dynamic_edges=True,
+                                                             all_edges_mask=self.__EDGE_MASK_OMNI)
+        
+        rank_attacks_bottom = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                                shift_len=self.__RANK_STRIDE_EQ,
+                                                                flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
+                                                                                                                            compared_const=unblocked_attack_paths64,
+                                                                                                                            shift_dir_func=np.right_shift,
+                                                                                                                            shift_len=self.__RANK_STRIDE_EQ),
+                                                                shift_func=self.helper.bit_shift_func_delegator(np.right_shift),
+                                                                dynamic_edges=True,
+                                                                all_edges_mask=self.__EDGE_MASK_OMNI)
+
+        return np.bitwise_or(np.bitwise_or(file_attacks_left, file_attacks_right),
+                             np.bitwise_or(rank_attacks_top, rank_attacks_bottom))
+    
+    def bishop_attacks64_dynamic(self, curr_piece_pos64, unblocked_attack_paths64) -> np.ulonglong:
+        north_east_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                                        shift_len=self.__RANK_STRIDE_SHORT,
+                                                                        flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
+                                                                                                                                    compared_const=unblocked_attack_paths64,
+                                                                                                                                    shift_dir_func=np.left_shift,
+                                                                                                                                    shift_len=self.__RANK_STRIDE_SHORT),
+                                                                        shift_func=self.helper.bit_shift_func_delegator(np.left_shift),
+                                                                        dynamic_edges=True,
+                                                                        all_edges_mask=self.__EDGE_MASK_OMNI)
+        
+        north_west_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                                        shift_len=self.__RANK_STRIDE_LONG,
+                                                                        flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
+                                                                                                                                    compared_const=unblocked_attack_paths64,
+                                                                                                                                    shift_dir_func=np.left_shift,
+                                                                                                                                    shift_len=self.__RANK_STRIDE_LONG),
+                                                                        shift_func=self.helper.bit_shift_func_delegator(np.left_shift),
+                                                                        dynamic_edges=True,
+                                                                        all_edges_mask=self.__EDGE_MASK_OMNI)
+
+        south_east_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                                        shift_len=self.__RANK_STRIDE_LONG,
+                                                                        flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
+                                                                                                                                    compared_const=unblocked_attack_paths64,
+                                                                                                                                    shift_dir_func=np.right_shift,
+                                                                                                                                    shift_len=self.__RANK_STRIDE_LONG),
+                                                                        shift_func=self.helper.bit_shift_func_delegator(np.right_shift),
+                                                                        dynamic_edges=True,
+                                                                        all_edges_mask=self.__EDGE_MASK_OMNI)
+        
+
+        south_west_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
+                                                                        shift_len=self.__RANK_STRIDE_SHORT,
+                                                                        flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
+                                                                                                                                    compared_const=unblocked_attack_paths64,
+                                                                                                                                    shift_dir_func=np.right_shift,
+                                                                                                                                    shift_len=self.__RANK_STRIDE_SHORT),
+                                                                        shift_func=self.helper.bit_shift_func_delegator(np.right_shift),
+                                                                        dynamic_edges=True,
+                                                                        all_edges_mask=self.__EDGE_MASK_OMNI)
+        
+        return np.bitwise_or(np.bitwise_or(north_east_diagonal_attacks, north_west_diagonal_attacks),
+                             np.bitwise_or(south_east_diagonal_attacks, south_west_diagonal_attacks))
+
+    def queen_attacks64_dynamic(self, curr_piece_pos64, unblocked_attack_paths64):
+        unblocked_rook_paths64 = np.bitwise_and(self.__rook_attacks64_static(curr_piece_pos64), unblocked_attack_paths64)
+        unblocked_bishop_paths64 = np.bitwise_and(self.__bishop_attacks64_static(curr_piece_pos64), unblocked_attack_paths64)
+        
+        return np.bitwise_or(self.bishop_attacks64_dynamic(curr_piece_pos64, unblocked_bishop_paths64), 
+                             self.rook_attacks64_dynamic(curr_piece_pos64, unblocked_rook_paths64))
+    
     def __init__(self, helper_obj):
         self.helper = helper_obj
         
@@ -350,102 +446,5 @@ class BitboardMasks:
                              np.bitwise_or(np.bitwise_or(north_east_diagonal_attack, south_east_diagonal_attack),
                                            np.bitwise_or(north_west_diagonal_attack, south_west_diagonal_attack)))
 
-    
-    def __rook_attacks64_dynamic(self, curr_piece_pos64, unblocked_attack_paths64) -> np.ulonglong:
-        file_attacks_left = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
-                                                              shift_len=self.__FILE_STRIDE,
-                                                              flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
-                                                                                                                          compared_const=unblocked_attack_paths64,
-                                                                                                                          shift_dir_func=np.left_shift,
-                                                                                                                          shift_len=self.__FILE_STRIDE),
-                                                              shift_func=self.helper.bit_shift_func_delegator(np.left_shift),
-                                                              dynamic_edges=True,
-                                                                all_edges_mask=self.__EDGE_MASK_OMNI)
-        
-        file_attacks_right = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
-                                                               shift_len=self.__FILE_STRIDE,
-                                                               flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
-                                                                                                                           compared_const=unblocked_attack_paths64,
-                                                                                                                           shift_dir_func=np.right_shift,
-                                                                                                                           shift_len=self.__FILE_STRIDE),
-                                                               shift_func=self.helper.bit_shift_func_delegator(np.right_shift),
-                                                               dynamic_edges=True,
-                                                                all_edges_mask=self.__EDGE_MASK_OMNI)
-        
-        rank_attacks_top = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
-                                                             shift_len=self.__RANK_STRIDE_EQ,
-                                                             flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
-                                                                                                                         compared_const=unblocked_attack_paths64,
-                                                                                                                         shift_dir_func=np.left_shift,
-                                                                                                                         shift_len=self.__RANK_STRIDE_EQ),
-                                                             shift_func=self.helper.bit_shift_func_delegator(np.left_shift),
-                                                             dynamic_edges=True,
-                                                             all_edges_mask=self.__EDGE_MASK_OMNI)
-        
-        rank_attacks_bottom = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
-                                                                shift_len=self.__RANK_STRIDE_EQ,
-                                                                flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
-                                                                                                                            compared_const=unblocked_attack_paths64,
-                                                                                                                            shift_dir_func=np.right_shift,
-                                                                                                                            shift_len=self.__RANK_STRIDE_EQ),
-                                                                shift_func=self.helper.bit_shift_func_delegator(np.right_shift),
-                                                                dynamic_edges=True,
-                                                                all_edges_mask=self.__EDGE_MASK_OMNI)
-
-        return np.bitwise_or(np.bitwise_or(file_attacks_left, file_attacks_right),
-                             np.bitwise_or(rank_attacks_top, rank_attacks_bottom))
-    
-    def __bishop_attacks64_dynamic(self, curr_piece_pos64, unblocked_attack_paths64) -> np.ulonglong:
-        north_east_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
-                                                                        shift_len=self.__RANK_STRIDE_SHORT,
-                                                                        flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
-                                                                                                                                    compared_const=unblocked_attack_paths64,
-                                                                                                                                    shift_dir_func=np.left_shift,
-                                                                                                                                    shift_len=self.__RANK_STRIDE_SHORT),
-                                                                        shift_func=self.helper.bit_shift_func_delegator(np.left_shift),
-                                                                        dynamic_edges=True,
-                                                                        all_edges_mask=self.__EDGE_MASK_OMNI)
-        
-        north_west_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
-                                                                        shift_len=self.__RANK_STRIDE_LONG,
-                                                                        flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
-                                                                                                                                    compared_const=unblocked_attack_paths64,
-                                                                                                                                    shift_dir_func=np.left_shift,
-                                                                                                                                    shift_len=self.__RANK_STRIDE_LONG),
-                                                                        shift_func=self.helper.bit_shift_func_delegator(np.left_shift),
-                                                                        dynamic_edges=True,
-                                                                        all_edges_mask=self.__EDGE_MASK_OMNI)
-        
-
-        south_east_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
-                                                                        shift_len=self.__RANK_STRIDE_LONG,
-                                                                        flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
-                                                                                                                                    compared_const=unblocked_attack_paths64,
-                                                                                                                                    shift_dir_func=np.right_shift,
-                                                                                                                                    shift_len=self.__RANK_STRIDE_LONG),
-                                                                        shift_func=self.helper.bit_shift_func_delegator(np.right_shift),
-                                                                        dynamic_edges=True,
-                                                                        all_edges_mask=self.__EDGE_MASK_OMNI)
-        
-
-        south_west_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
-                                                                        shift_len=self.__RANK_STRIDE_SHORT,
-                                                                        flag_func=self.helper.attacks64_dynamic_flag_func_delegator(op=operator.gt,
-                                                                                                                                    compared_const=unblocked_attack_paths64,
-                                                                                                                                    shift_dir_func=np.right_shift,
-                                                                                                                                    shift_len=self.__RANK_STRIDE_SHORT),
-                                                                        shift_func=self.helper.bit_shift_func_delegator(np.right_shift),
-                                                                        dynamic_edges=True,
-                                                                        all_edges_mask=self.__EDGE_MASK_OMNI)
-        
-        return np.bitwise_or(np.bitwise_or(north_east_diagonal_attacks, north_west_diagonal_attacks),
-                             np.bitwise_or(south_east_diagonal_attacks, south_west_diagonal_attacks))
-
-    def __queen_attacks64_dynamic(self, curr_piece_pos64, unblocked_attack_paths64):
-        unblocked_rook_paths64 = np.bitwise_and(self.__rook_attacks64_static(curr_piece_pos64), unblocked_attack_paths64)
-        unblocked_bishop_paths64 = np.bitwise_and(self.__bishop_attacks64_static(curr_piece_pos64), unblocked_attack_paths64)
-        
-        return np.bitwise_or(self.bishop_attacks64_dynamic(curr_piece_pos64, unblocked_bishop_paths64), 
-                             self.rook_attacks64_dynamic(curr_piece_pos64, unblocked_rook_paths64))
 
     
