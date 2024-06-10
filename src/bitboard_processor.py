@@ -26,14 +26,14 @@ class BitboardProcessor:
         self.__all_static_attacks64 = self.__bb_masks.get_all_attacks64_static()
     
     def get_piece_type_and_idx(self, side, from_sqr_piece_pos64, all_side_pieces64):
-        piece_type_idx = self.__get_piece_type_idx_from_pos64(from_sqr_piece_pos64, all_side_pieces64)
+        piece_type_idx = self.get_piece_type_idx_from_pos64(from_sqr_piece_pos64, all_side_pieces64)
         print(str(piece_type_idx))
         return self.key_map[bool(side)][piece_type_idx], piece_type_idx
     
     def get_side(board_auxiliary_info_int64):
         return bool(np.bitwise_and(board_auxiliary_info_int64, np.ulonglong(0b1)))
     
-    def __get_piece_type_idx_from_pos64(self, curr_piece_pos64, pieces_arr):
+    def get_piece_type_idx_from_pos64(self, curr_piece_pos64, pieces_arr):
         return np.argmax(np.apply_along_axis(func1d=lambda piece_type_mask: np.bitwise_and(piece_type_mask, curr_piece_pos64) > 0,
                                              axis=0, 
                                              arr=pieces_arr))
