@@ -40,6 +40,7 @@ class Positions:
         Positions.START_POS["all_w_pieces"] = all_w_pieces
         Positions.START_POS["all_b_pieces"] = all_b_pieces
         Positions.START_POS["all_pieces"] = all_pieces
+
         
         return Positions.START_POS
 

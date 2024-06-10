@@ -349,6 +349,7 @@ class BitboardMasks:
                                            np.bitwise_or(rank_attack_top, rank_attack_bottom)),
                              np.bitwise_or(np.bitwise_or(north_east_diagonal_attack, south_east_diagonal_attack),
                                            np.bitwise_or(north_west_diagonal_attack, south_west_diagonal_attack)))
+
     
     def __rook_attacks64_dynamic(self, curr_piece_pos64, unblocked_attack_paths64) -> np.ulonglong:
         file_attacks_left = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,

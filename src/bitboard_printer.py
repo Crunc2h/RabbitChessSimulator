@@ -4,18 +4,18 @@ class BitboardPrinter:
     def position_to_str(board, full_display=False):
 
         if full_display:
-            w_r = format(board["W_Pieces_arr"][0], "#b")[2::].zfill(64)[::-1]
-            w_n = format(board["W_Pieces_arr"][1], "#b")[2::].zfill(64)[::-1]
-            w_b = format(board["W_Pieces_arr"][2], "#b")[2::].zfill(64)[::-1]
-            w_q = format(board["W_Pieces_arr"][3], "#b")[2::].zfill(64)[::-1]
-            w_k = format(board["W_Pieces_arr"][4], "#b")[2::].zfill(64)[::-1]
-            w_p = format(board["W_Pieces_arr"][5], "#b")[2::].zfill(64)[::-1]
-            b_r = format(board["B_Pieces_arr"][0], "#b")[2::].zfill(64)[::-1]
-            b_n = format(board["B_Pieces_arr"][1], "#b")[2::].zfill(64)[::-1]
-            b_b = format(board["B_Pieces_arr"][2], "#b")[2::].zfill(64)[::-1]
-            b_q = format(board["B_Pieces_arr"][3], "#b")[2::].zfill(64)[::-1]
-            b_k = format(board["B_Pieces_arr"][4], "#b")[2::].zfill(64)[::-1]
-            b_p = format(board["B_Pieces_arr"][5], "#b")[2::].zfill(64)[::-1]
+            w_r = format(board["w_pieces"][0], "#b")[2::].zfill(64)[::-1]
+            w_n = format(board["w_pieces"][1], "#b")[2::].zfill(64)[::-1]
+            w_b = format(board["w_pieces"][2], "#b")[2::].zfill(64)[::-1]
+            w_q = format(board["w_pieces"][3], "#b")[2::].zfill(64)[::-1]
+            w_k = format(board["w_pieces"][4], "#b")[2::].zfill(64)[::-1]
+            w_p = format(board["w_pieces"][5], "#b")[2::].zfill(64)[::-1]
+            b_r = format(board["b_pieces"][0], "#b")[2::].zfill(64)[::-1]
+            b_n = format(board["b_pieces"][1], "#b")[2::].zfill(64)[::-1]
+            b_b = format(board["b_pieces"][2], "#b")[2::].zfill(64)[::-1]
+            b_q = format(board["b_pieces"][3], "#b")[2::].zfill(64)[::-1]
+            b_k = format(board["b_pieces"][4], "#b")[2::].zfill(64)[::-1]
+            b_p = format(board["b_pieces"][5], "#b")[2::].zfill(64)[::-1]
 
             binary_as_str = BitboardPrinter.overwrite_str("0" * 64, w_r, "r")
             binary_as_str = BitboardPrinter.overwrite_str(binary_as_str, w_n, "n")
