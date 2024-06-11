@@ -1,6 +1,7 @@
 import numpy as np
 from static.pieces import Pieces
 from bitboard_printer import BitboardPrinter
+from static.squares import Squares
 
 class MoveValidator:
     
@@ -22,8 +23,6 @@ class MoveValidator:
                  en_passant_squares64):
         if from_square_idx == to_square_idx:
             return False, None
-        
-        
         
         all_piece_positions64_from_idx = self.__bb_masks.get_all_piece_positions64_from_idx()
         
@@ -113,7 +112,28 @@ class MoveValidator:
             "piece_type_idx":piece_type_idx
         }
     
-
+    def generate_valid_moves(self,
+                             side,
+                             all_side_pieces64_arr,
+                             all_oppo_pieces64_arr,
+                             all_pieces64,
+                             all_side_pieces64,
+                             all_oppo_pieces64):
+        valid_moves = {}
+        for i in range(64):
+            for f in range(64):
+                valid, info = self.is_valid(from_square_idx=i, 
+                                            to_square_idx=f, 
+                                            side=side,
+                                            all_side_pieces64_arr=all_side_pieces64_arr,
+                                            all_oppo_pieces64_arr=all_oppo_pieces64_arr,
+                                            all_pieces64=all_pieces64,
+                                            all_side_pieces64=all_side_pieces64,
+                                            all_oppo_pieces64=all_oppo_pieces64,
+                                            en_passant_squares64=np.ulonglong(0))
+                if valid:
+                    valid_moves[f"{Squares.idx_to_sqr(i)} -> {Squares.idx_to_sqr(f)}"] = info
+        return valid_moves
     
 
 

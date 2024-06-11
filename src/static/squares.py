@@ -1,4 +1,11 @@
 class Squares:
+    
+    
+    
+    
+    
+    
+    
     a1 = {
         "rank":1,
         "file":1,
@@ -328,7 +335,6 @@ class Squares:
     }
 
     def input_to_sqr(input):
-
         str_to_sqr = {
             "a1": Squares.a1,
             "b1": Squares.b1,
@@ -395,9 +401,19 @@ class Squares:
             "g8": Squares.g8,
             "h8": Squares.h8,
         }
-
-        # Handle potential errors (e.g., invalid input string)
         if input not in str_to_sqr:
             raise ValueError("Invalid algebraic chess notation:", input)
-
         return str_to_sqr[input]
+    
+    def idx_to_sqr(idx):
+        index_to_square = {
+  0: "h1", 1: "g1", 2: "f1", 3: "e1", 4: "d1", 5: "c1", 6: "b1", 7: "a1",
+  8: "h2", 9: "g2", 10: "f2", 11: "e2", 12: "d2", 13: "c2", 14: "b2", 15: "a2",
+  16: "h3", 17: "g3", 18: "f3", 19: "e3", 20: "d3", 21: "c3", 22: "b3", 23: "a3",
+  24: "h4", 25: "g4", 26: "f4", 27: "e4", 28: "d4", 29: "c4", 30: "b4", 31: "a4",
+  32: "h5", 33: "g5", 34: "f5", 35: "e5", 36: "d5", 37: "c5", 38: "b5", 39: "a5",
+  40: "h6", 41: "g6", 42: "f6", 43: "e6", 44: "d6", 45: "c6", 46: "b6", 47: "a6",
+  48: "h7", 49: "g7", 50: "f7", 51: "e7", 52: "d7", 53: "c7", 54: "b7", 55: "a7",
+  56: "h8", 57: "g8", 58: "f8", 59: "e8", 60: "d8", 61: "c8", 62: "b8", 63: "a8",
+}
+        return index_to_square[idx]

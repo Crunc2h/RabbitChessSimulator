@@ -259,7 +259,7 @@ class BitboardMasks:
             elif np.bitwise_and(current_piece_pos64, self.__EDGE_MASK_LEFT) > 0:
                 return np.left_shift(current_piece_pos64, np.uint(self.__RANK_STRIDE_SHORT))
             elif np.bitwise_and(current_piece_pos64, self.__EDGE_MASK_RIGHT) > 0:
-                return np.left_shift(current_piece_pos64, np.uint(self.__RANK_STRIDE_SHORT))
+                return np.left_shift(current_piece_pos64, np.uint(self.__RANK_STRIDE_LONG))
             
             return np.bitwise_or(np.left_shift(current_piece_pos64, np.uint(self.__RANK_STRIDE_LONG)), 
                                  np.left_shift(current_piece_pos64, np.uint(self.__RANK_STRIDE_SHORT)))
