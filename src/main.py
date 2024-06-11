@@ -11,17 +11,20 @@ from move_validator import MoveValidator
 from bitboard_helper import BitboardStorageHelper
 from board_transformer import BoardTransformer
 import time
+import random
 import os
+import copy
 
 
 def game_loop():
+    
     helper = BitboardStorageHelper()
-    test_board = Bitboard(Positions.start_pos())
+    test_board = Bitboard(copy.deepcopy(Positions.start_pos()))
     masks_obj = BitboardMasks(helper_obj=helper)
     processor_obj = BitboardProcessor(bb_masks_obj=masks_obj)
     validator = MoveValidator(bb_masks_obj=masks_obj, bb_processor_obj=processor_obj)
     transformer = BoardTransformer(bb_processor_obj=processor_obj)
-
+    move_count = 0
     is_check = False
     while True:
         os.system('clear')
@@ -78,18 +81,33 @@ def game_loop():
                                                      all_oppo_pieces64=oppo_pieces64)
         if is_check and len(valid_moves.keys()) == 0:
             print(f"CHECK MATE! {'White' if not side else 'Black'} Wins!")
+            print(move_count)
+            time.sleep(15)
+            game_loop()
             break
-        if is_check == False and len(valid_moves.keys()) == 0:
+        
+        if ((is_check == False and len(valid_moves.keys()) == 0) or
+            (is_check == False and test_board.data["all_pieces"].bit_count() == 2) or
+            (is_check == False and test_board.data["all_pieces"].bit_count() == 3 and side_pieces64_arr[0].bit_count() == 0 and side_pieces64_arr[3].bit_count() == 0 and oppo_pieces64_arr[0].bit_count() == 0 and oppo_pieces64_arr[3].bit_count() == 0) or
+            (is_check == False and test_board.data["all_pieces"].bit_count() == 4 and side_pieces64_arr[1].bit_count() == 1 and oppo_pieces64_arr[1].bit_count() == 1) or
+            (is_check == False and test_board.data["all_pieces"].bit_count() == 4 and side_pieces64_arr[5].bit_count() == 1 and oppo_pieces64_arr[5].bit_count() == 1)):
             print("STALEMATE!")
+            print(move_count)
+            time.sleep(15)
+            game_loop()
             break
+
+
         
         for valid_move in valid_moves.keys():
             print(f"* {valid_move}")
 
+        '''
         squares = input("Make a move:").lower().split()
         move_key = f"{squares[0].lower()} -> {squares[1].lower()}" 
 
-        if move_key in valid_moves.keys():                                                     
+        if move_key in valid_moves.keys():                                                
+            
             move_info = valid_moves[move_key]
             is_check = move_info["check"]
             transformer.transform_board(board=test_board,
@@ -99,9 +117,19 @@ def game_loop():
         else:
             print("Invalid Move!")
             time.sleep(2)
+        '''
+        move_info = valid_moves[random.choice(list(valid_moves.keys()))]
+        is_check = move_info["check"]
+        transformer.transform_board(board=test_board,
+                                    info=move_info,
+                                    side_pieces64_arr=side_pieces64_arr,
+                                    oppo_pieces64_arr=oppo_pieces64_arr)
+        move_count += 1
+    
 
 
 game_loop()
+
 
 
 

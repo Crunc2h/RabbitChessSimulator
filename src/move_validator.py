@@ -40,6 +40,7 @@ class MoveValidator:
                                                                                 from_sqr_piece_pos64, 
                                                                                 all_side_pieces64_arr)
         all_attacks64 = self.__bb_masks.get_all_attacks64_static()
+        
         to_sqr_piece_attacks64 = None
         
         if piece_type != Pieces.W_PAWN and piece_type != Pieces.B_PAWN:
@@ -73,7 +74,8 @@ class MoveValidator:
             if np.bitwise_and(piece_movement_path, all_pieces64) > 0:
                 return False, None
 
-        if not to_sqr_piece_attacks64: to_sqr_piece_attacks64 = all_attacks64[piece_type][to_sqr_piece_pos64]
+    
+        if to_sqr_piece_attacks64 == None: to_sqr_piece_attacks64 = all_attacks64[piece_type][to_sqr_piece_pos64]
 
         updated_all_pieces_pos64 = self.__bb_processor.update_pos64(all_pieces64, from_sqr_piece_pos64, to_sqr_piece_pos64)
         cp_side_pieces64_arr = np.copy(all_side_pieces64_arr)
@@ -109,7 +111,9 @@ class MoveValidator:
             "new_board_pos64":updated_all_pieces_pos64,
             "from_sqr_pos64":from_sqr_piece_pos64,
             "to_sqr_pos64":to_sqr_piece_pos64,
-            "piece_type_idx":piece_type_idx
+            "piece_type_idx":piece_type_idx,
+            "oppo_all_attacks":oppo_all_attacks,
+            "side_king_pos64":side_king_pos64
         }
     
     def generate_valid_moves(self,
@@ -131,7 +135,7 @@ class MoveValidator:
                                             all_side_pieces64=all_side_pieces64,
                                             all_oppo_pieces64=all_oppo_pieces64,
                                             en_passant_squares64=np.ulonglong(0))
-                if valid:
+                if valid is True:
                     valid_moves[f"{Squares.idx_to_sqr(i)} -> {Squares.idx_to_sqr(f)}"] = info
         return valid_moves
     
