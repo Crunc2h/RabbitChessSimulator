@@ -2,6 +2,7 @@ import numpy as np
 from static.pieces import Pieces
 from bitboard_printer import BitboardPrinter
 from static.squares import Squares
+import copy
 
 class MoveValidator:
     
@@ -78,8 +79,8 @@ class MoveValidator:
         if to_sqr_piece_attacks64 == None: to_sqr_piece_attacks64 = all_attacks64[piece_type][to_sqr_piece_pos64]
 
         updated_all_pieces_pos64 = self.__bb_processor.update_pos64(all_pieces64, from_sqr_piece_pos64, to_sqr_piece_pos64)
-        cp_side_pieces64_arr = np.copy(all_side_pieces64_arr)
-        cp_oppo_pieces64_arr = np.copy(all_oppo_pieces64_arr)
+        cp_side_pieces64_arr = copy.deepcopy(all_side_pieces64_arr)
+        cp_oppo_pieces64_arr = copy.deepcopy(all_oppo_pieces64_arr)
         
         if np.bitwise_and(to_sqr_piece_pos64, all_oppo_pieces64) > 0:
             captured_piece_type_idx = self.__bb_processor.get_piece_type_idx_from_pos64(to_sqr_piece_pos64, cp_oppo_pieces64_arr)
@@ -98,6 +99,9 @@ class MoveValidator:
         
         side_king_pos64 = cp_side_pieces64_arr[4]
         enemy_king_pos64 = cp_oppo_pieces64_arr[4]
+
+        if side_king_pos64.bit_count() == 0:
+            raise Exception("Hey amk wtf!")
         
         if np.bitwise_and(oppo_all_attacks, side_king_pos64) > 0:
             return False, None
@@ -112,6 +116,7 @@ class MoveValidator:
             "from_sqr_pos64":from_sqr_piece_pos64,
             "to_sqr_pos64":to_sqr_piece_pos64,
             "piece_type_idx":piece_type_idx,
+            "side_all_attacks":side_all_attacks,
             "oppo_all_attacks":oppo_all_attacks,
             "side_king_pos64":side_king_pos64
         }

@@ -1,8 +1,11 @@
+import os
+
+
 class BitboardPrinter:
     
     @staticmethod
     def position_to_str(board, full_display=False):
-
+        
         if full_display:
             w_r = format(board["w_pieces"][0], "#b")[2::].zfill(64)[::-1]
             w_n = format(board["w_pieces"][1], "#b")[2::].zfill(64)[::-1]
@@ -49,7 +52,9 @@ class BitboardPrinter:
     
     @staticmethod
     def print(board, full_display=False):
+        os.system('setterm -background black -foreground yellow')
         print(BitboardPrinter.position_to_str(board, full_display))
+        os.system('setterm -background black -foreground green')
 
     @staticmethod
     def overwrite_str(str1, str2, overwrite_char):
