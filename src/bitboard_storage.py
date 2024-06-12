@@ -29,7 +29,7 @@ class BitboardMasks:
                                                                                                                           shift_len=self.__FILE_STRIDE),
                                                               shift_func=self.helper.bit_shift_func_delegator(np.left_shift),
                                                               dynamic_edges=True,
-                                                                all_edges_mask=self.__EDGE_MASK_OMNI)
+                                                                all_edges_mask=self.__EDGE_MASK_LEFT)
         
         file_attacks_right = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
                                                                shift_len=self.__FILE_STRIDE,
@@ -39,7 +39,7 @@ class BitboardMasks:
                                                                                                                            shift_len=self.__FILE_STRIDE),
                                                                shift_func=self.helper.bit_shift_func_delegator(np.right_shift),
                                                                dynamic_edges=True,
-                                                                all_edges_mask=self.__EDGE_MASK_OMNI)
+                                                                all_edges_mask=self.__EDGE_MASK_RIGHT)
         
         rank_attacks_top = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
                                                              shift_len=self.__RANK_STRIDE_EQ,
@@ -49,7 +49,7 @@ class BitboardMasks:
                                                                                                                          shift_len=self.__RANK_STRIDE_EQ),
                                                              shift_func=self.helper.bit_shift_func_delegator(np.left_shift),
                                                              dynamic_edges=True,
-                                                             all_edges_mask=self.__EDGE_MASK_OMNI)
+                                                             all_edges_mask=self.__EDGE_MASK_TOP)
         
         rank_attacks_bottom = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
                                                                 shift_len=self.__RANK_STRIDE_EQ,
@@ -59,7 +59,7 @@ class BitboardMasks:
                                                                                                                             shift_len=self.__RANK_STRIDE_EQ),
                                                                 shift_func=self.helper.bit_shift_func_delegator(np.right_shift),
                                                                 dynamic_edges=True,
-                                                                all_edges_mask=self.__EDGE_MASK_OMNI)
+                                                                all_edges_mask=self.__EDGE_MASK_BOTTOM)
 
         return np.bitwise_or(np.bitwise_or(file_attacks_left, file_attacks_right),
                              np.bitwise_or(rank_attacks_top, rank_attacks_bottom))
@@ -73,7 +73,7 @@ class BitboardMasks:
                                                                                                                                     shift_len=self.__RANK_STRIDE_SHORT),
                                                                         shift_func=self.helper.bit_shift_func_delegator(np.left_shift),
                                                                         dynamic_edges=True,
-                                                                        all_edges_mask=self.__EDGE_MASK_OMNI)
+                                                                        all_edges_mask=np.bitwise_or(self.__EDGE_MASK_TOP, self.__EDGE_MASK_RIGHT))
         
         north_west_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
                                                                         shift_len=self.__RANK_STRIDE_LONG,
@@ -83,7 +83,7 @@ class BitboardMasks:
                                                                                                                                     shift_len=self.__RANK_STRIDE_LONG),
                                                                         shift_func=self.helper.bit_shift_func_delegator(np.left_shift),
                                                                         dynamic_edges=True,
-                                                                        all_edges_mask=self.__EDGE_MASK_OMNI)
+                                                                        all_edges_mask=np.bitwise_or(self.__EDGE_MASK_TOP, self.__EDGE_MASK_LEFT))
 
         south_east_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
                                                                         shift_len=self.__RANK_STRIDE_LONG,
@@ -93,7 +93,7 @@ class BitboardMasks:
                                                                                                                                     shift_len=self.__RANK_STRIDE_LONG),
                                                                         shift_func=self.helper.bit_shift_func_delegator(np.right_shift),
                                                                         dynamic_edges=True,
-                                                                        all_edges_mask=self.__EDGE_MASK_OMNI)
+                                                                        all_edges_mask=np.bitwise_or(self.__EDGE_MASK_BOTTOM, self.__EDGE_MASK_RIGHT))
         
 
         south_west_diagonal_attacks = self.helper.conditional_bit_shift(curr_piece_pos64=curr_piece_pos64,
@@ -104,7 +104,7 @@ class BitboardMasks:
                                                                                                                                     shift_len=self.__RANK_STRIDE_SHORT),
                                                                         shift_func=self.helper.bit_shift_func_delegator(np.right_shift),
                                                                         dynamic_edges=True,
-                                                                        all_edges_mask=self.__EDGE_MASK_OMNI)
+                                                                        all_edges_mask=np.bitwise_or(self.__EDGE_MASK_BOTTOM, self.__EDGE_MASK_LEFT))
         
         return np.bitwise_or(np.bitwise_or(north_east_diagonal_attacks, north_west_diagonal_attacks),
                              np.bitwise_or(south_east_diagonal_attacks, south_west_diagonal_attacks))
@@ -246,7 +246,6 @@ class BitboardMasks:
             return np.left_shift(curr_piece_pos64, np.uint(self.__RANK_STRIDE_EQ))
         
         if np.bitwise_and(curr_piece_pos64, self.__B_EN_PASSANT_MASK) > 0:
-            
             return np.bitwise_or(np.right_shift(curr_piece_pos64, np.uint(self.__RANK_STRIDE_EQ)), 
                                  np.right_shift(curr_piece_pos64, np.uint(self.__RANK_STRIDE_EQ * 2)))
         

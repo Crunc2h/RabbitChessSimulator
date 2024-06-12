@@ -16,6 +16,7 @@ import os
 import copy
 def tst(test_board):
     is_check = np.bitwise_and(test_board.data["castling_check_color"], np.ulonglong(0b10) > 0)
+    '''
     print("========WHITE ROOKS========")
     BitboardPrinter.print(test_board.data["w_pieces"][0])
     print("========WHITE KNIGHTS======")
@@ -44,9 +45,11 @@ def tst(test_board):
     BitboardPrinter.print(test_board.data["all_w_pieces"])
     print("========BLACK PIECES=")
     BitboardPrinter.print(test_board.data["all_b_pieces"])
+    '''
+    
     print(f"{'===== Check! =====' if is_check else ''}")
-    print(f"========ALL PIECES========{'   Whites Turn' if np.bitwise_and(np.ulonglong(0b1), test_board.data['castling_check_color']) > 0 else '   Blacks Turn'}")
-    BitboardPrinter.print(test_board.data, full_display=True)
+    print(f"========BOARD========{'   Whites Turn' if np.bitwise_and(np.ulonglong(0b1), test_board.data['castling_check_color']) > 0 else '   Blacks Turn'}")
+    BitboardPrinter.print(test_board.data["all_pieces"], full_display=False)
 
 def game_loop():
     boards = []
@@ -57,118 +60,58 @@ def game_loop():
     validator = MoveValidator(bb_masks_obj=masks_obj, bb_processor_obj=processor_obj)
     transformer = BoardTransformer(bb_processor_obj=processor_obj)
     move_count = 0
+    
     is_check = False
-    try:
-        while True:
-            boards.append(test_board)
-            os.system('clear')
-            print("========WHITE ROOKS========")
-            BitboardPrinter.print(test_board.data["w_pieces"][0])
-            print("========WHITE KNIGHTS======")
-            BitboardPrinter.print(test_board.data["w_pieces"][1])
-            print("========WHITE BISHOPS=")
-            BitboardPrinter.print(test_board.data["w_pieces"][2])
-            print("========WHITE QUEENS=")
-            BitboardPrinter.print(test_board.data["w_pieces"][3])
-            print("========WHITE KINGS=")
-            BitboardPrinter.print(test_board.data["w_pieces"][4])
-            print("========WHITE PAWNS=")
-            BitboardPrinter.print(test_board.data["w_pieces"][5])
-            print("========BLACK ROOKS=")
-            BitboardPrinter.print(test_board.data["b_pieces"][0])
-            print("========BLACK KNIGHTS=")
-            BitboardPrinter.print(test_board.data["b_pieces"][1])
-            print("========BLACK BISHOPS=")
-            BitboardPrinter.print(test_board.data["b_pieces"][2])
-            print("========BLACK_QUEENS=")
-            BitboardPrinter.print(test_board.data["b_pieces"][3])
-            print("========BLACK_KING=")
-            BitboardPrinter.print(test_board.data["b_pieces"][4])
-            print("========BLACK PAWNS=")
-            BitboardPrinter.print(test_board.data["b_pieces"][5])
-            print("========WHITE PIECES=")
-            BitboardPrinter.print(test_board.data["all_w_pieces"])
-            print("========BLACK PIECES=")
-            BitboardPrinter.print(test_board.data["all_b_pieces"])
-
-            print(f"{'===== Check! =====' if is_check else ''}")
-            print(f"========ALL PIECES========{'   Whites Turn' if np.bitwise_and(np.ulonglong(0b1), test_board.data['castling_check_color']) > 0 else '   Blacks Turn'}")
-            BitboardPrinter.print(test_board.data, full_display=True)
-
-            side = bool(np.bitwise_and(np.ulonglong(1), test_board.data["castling_check_color"]))
-            if side:
-                side_pieces64_arr = test_board.data["w_pieces"]
-                oppo_pieces64_arr = test_board.data["b_pieces"]
-                side_pieces64 = test_board.data["all_w_pieces"]
-                oppo_pieces64 = test_board.data["all_b_pieces"]
-            else:
-                side_pieces64_arr = test_board.data["b_pieces"]
-                oppo_pieces64_arr = test_board.data["w_pieces"]
-                side_pieces64 = test_board.data["all_b_pieces"]
-                oppo_pieces64 = test_board.data["all_w_pieces"]
-
-            valid_moves = validator.generate_valid_moves(side=side,
-                                                         all_side_pieces64_arr=side_pieces64_arr,
-                                                         all_oppo_pieces64_arr=oppo_pieces64_arr,
-                                                         all_pieces64=test_board.data["all_pieces"],
-                                                         all_side_pieces64=side_pieces64,
-                                                         all_oppo_pieces64=oppo_pieces64)
-            if is_check and len(valid_moves.keys()) == 0:
-                print(f"CHECK MATE! {'White' if not side else 'Black'} Wins!")
-                print(move_count)
-
-                game_loop()
-                break
-            
-            if ((is_check == False and len(valid_moves.keys()) == 0) or
-                (is_check == False and test_board.data["all_pieces"].bit_count() == 2) or
-                (is_check == False and test_board.data["all_pieces"].bit_count() == 3 and side_pieces64_arr[0].bit_count() == 0 and side_pieces64_arr[3].bit_count() == 0 and oppo_pieces64_arr[0].bit_count() == 0 and oppo_pieces64_arr[3].bit_count() == 0) or
-                (is_check == False and test_board.data["all_pieces"].bit_count() == 4 and side_pieces64_arr[1].bit_count() == 1 and oppo_pieces64_arr[1].bit_count() == 1) or
-                (is_check == False and test_board.data["all_pieces"].bit_count() == 4 and side_pieces64_arr[5].bit_count() == 1 and oppo_pieces64_arr[5].bit_count() == 1)):
-                print("STALEMATE!")
-                print(move_count)
-
-                game_loop()
-                break
-
-            
-            
-            for valid_move in valid_moves.keys():
-                print(f"* {valid_move}")
-
-            '''
-            squares = input("Make a move:").lower().split()
-            move_key = f"{squares[0].lower()} -> {squares[1].lower()}" 
-
-            if move_key in valid_moves.keys():                                                
-
-                move_info = valid_moves[move_key]
-                is_check = move_info["check"]
-                transformer.transform_board(board=test_board,
-                                            info=move_info,
-                                            side_pieces64_arr=side_pieces64_arr,
-                                            oppo_pieces64_arr=oppo_pieces64_arr)
-            else:
-                print("Invalid Move!")
-                time.sleep(2)
-            '''
-            move_info = valid_moves[random.choice(list(valid_moves.keys()))]
-            BitboardPrinter.print(move_info["oppo_all_attacks"])
-            is_check = move_info["check"]
-            transformer.transform_board(board=test_board,
-                                        info=move_info,
-                                        side_pieces64_arr=side_pieces64_arr,
-                                        oppo_pieces64_arr=oppo_pieces64_arr)
-            move_count += 1
-    except:
+    while True:
+        boards.append(test_board)
         os.system('clear')
-        tst(boards[-2])
-        print("===========")
-        tst(boards[-1])
+        print(move_count)
+        print(f"{'===== Check! =====' if is_check else ''}")
+        print(f"========BOARD========{'   Whites Turn' if np.bitwise_and(np.ulonglong(0b1), test_board.data['castling_check_color']) > 0 else '   Blacks Turn'}")
+        BitboardPrinter.print(test_board.data, full_display=True)
+        
+        side = bool(np.bitwise_and(np.ulonglong(1), test_board.data["castling_check_color"]))
+        if side:
+            side_pieces64_arr = test_board.data["w_pieces"]
+            oppo_pieces64_arr = test_board.data["b_pieces"]
+            side_pieces64 = test_board.data["all_w_pieces"]
+            oppo_pieces64 = test_board.data["all_b_pieces"]
+        else:
+            side_pieces64_arr = test_board.data["b_pieces"]
+            oppo_pieces64_arr = test_board.data["w_pieces"]
+            side_pieces64 = test_board.data["all_b_pieces"]
+            oppo_pieces64 = test_board.data["all_w_pieces"]
+        valid_moves = validator.generate_valid_moves(side=side,
+                                                     all_side_pieces64_arr=side_pieces64_arr,
+                                                     all_oppo_pieces64_arr=oppo_pieces64_arr,
+                                                     all_pieces64=test_board.data["all_pieces"],
+                                                     all_side_pieces64=side_pieces64,
+                                                     all_oppo_pieces64=oppo_pieces64)
+        if is_check and len(valid_moves.keys()) == 0:
+            print(f"CHECK MATE! {'White' if not side else 'Black'} Wins!")
+            time.sleep(5)
+            game_loop()
+            break
+        
+        if ((is_check == False and len(valid_moves.keys()) == 0) or
+            (is_check == False and test_board.data["all_pieces"].bit_count() == 2) or
+            (is_check == False and test_board.data["all_pieces"].bit_count() == 3 and side_pieces64_arr[0].bit_count() == 0 and side_pieces64_arr[3].bit_count() == 0 and oppo_pieces64_arr[0].bit_count() == 0 and oppo_pieces64_arr[3].bit_count() == 0) or
+            (is_check == False and test_board.data["all_pieces"].bit_count() == 4 and side_pieces64_arr[1].bit_count() == 1 and oppo_pieces64_arr[1].bit_count() == 1) or
+            (is_check == False and test_board.data["all_pieces"].bit_count() == 4 and side_pieces64_arr[5].bit_count() == 1 and oppo_pieces64_arr[5].bit_count() == 1)):
+            print("STALEMATE!")
+            time.sleep(5)
+            game_loop()
+            break
+         
+        move_info = valid_moves[random.choice(list(valid_moves.keys()))]
+        is_check = move_info["check"]
+        transformer.transform_board(board=test_board,
+                                    info=move_info,
+                                    side_pieces64_arr=side_pieces64_arr,
+                                    oppo_pieces64_arr=oppo_pieces64_arr)
+        move_count += 1
 
-
-
-
+    
 game_loop()
 
 

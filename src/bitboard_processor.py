@@ -24,8 +24,6 @@ class BitboardProcessor:
         }
         self.__bb_masks = bb_masks_obj
         self.__all_static_attacks64 = self.__bb_masks.get_all_attacks64_static()
-
-    
     
     def get_piece_type_and_idx(self, side, from_sqr_piece_pos64, all_side_pieces64):
         piece_type_idx = self.get_piece_type_idx_from_pos64(from_sqr_piece_pos64, all_side_pieces64)
@@ -78,7 +76,6 @@ class BitboardProcessor:
                                                                           side=side)
         
         return np.bitwise_or(king_attacks64_static, np.bitwise_or(pawns_attacks64_static, knights_attacks64_static)) 
-
     
     def __map_piece_pos_to_dynamic_attack(self, 
                                           piece_pos64, 

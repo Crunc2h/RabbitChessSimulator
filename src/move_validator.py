@@ -116,9 +116,6 @@ class MoveValidator:
             "from_sqr_pos64":from_sqr_piece_pos64,
             "to_sqr_pos64":to_sqr_piece_pos64,
             "piece_type_idx":piece_type_idx,
-            "side_all_attacks":side_all_attacks,
-            "oppo_all_attacks":oppo_all_attacks,
-            "side_king_pos64":side_king_pos64
         }
     
     def generate_valid_moves(self,
