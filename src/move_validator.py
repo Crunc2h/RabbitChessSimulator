@@ -1,7 +1,7 @@
 import numpy as np
 from static.pieces import Pieces
-from bitboard_printer import BitboardPrinter
 from static.squares import Squares
+from move_info import MoveInfo
 import copy
 
 class MoveValidator:
@@ -13,7 +13,7 @@ class MoveValidator:
         self.__bb_processor = bb_processor_obj
     
     def is_valid(self,
-                 side, 
+                 is_white, 
                  from_square_idx, 
                  to_square_idx, 
                  all_side_pieces64_arr,
@@ -22,6 +22,7 @@ class MoveValidator:
                  all_side_pieces64,
                  all_oppo_pieces64,
                  en_passant_squares64):
+        
         if from_square_idx == to_square_idx:
             return False, None
         
@@ -37,7 +38,7 @@ class MoveValidator:
         if np.bitwise_and(to_sqr_piece_pos64, all_side_pieces64) > 0:
             return False, None
         
-        piece_type, piece_type_idx = self.__bb_processor.get_piece_type_and_idx(side, 
+        piece_type, piece_type_idx = self.__bb_processor.get_piece_type_and_idx(is_white, 
                                                                                 from_sqr_piece_pos64, 
                                                                                 all_side_pieces64_arr)
         all_attacks64 = self.__bb_masks.get_all_attacks64_static()
@@ -79,6 +80,7 @@ class MoveValidator:
         if to_sqr_piece_attacks64 == None: to_sqr_piece_attacks64 = all_attacks64[piece_type][to_sqr_piece_pos64]
 
         updated_all_pieces_pos64 = self.__bb_processor.update_pos64(all_pieces64, from_sqr_piece_pos64, to_sqr_piece_pos64)
+        
         cp_side_pieces64_arr = copy.deepcopy(all_side_pieces64_arr)
         cp_oppo_pieces64_arr = copy.deepcopy(all_oppo_pieces64_arr)
         
@@ -88,8 +90,8 @@ class MoveValidator:
         
         cp_side_pieces64_arr[piece_type_idx] = np.bitwise_xor(cp_side_pieces64_arr[piece_type_idx], np.bitwise_or(from_sqr_piece_pos64, to_sqr_piece_pos64))
                 
-        side_static_attacks = self.__bb_processor.update_all_attacks64_static(cp_side_pieces64_arr, side)
-        oppo_static_attacks = self.__bb_processor.update_all_attacks64_static(cp_oppo_pieces64_arr, not side)
+        side_static_attacks = self.__bb_processor.update_all_attacks64_static(cp_side_pieces64_arr, is_white)
+        oppo_static_attacks = self.__bb_processor.update_all_attacks64_static(cp_oppo_pieces64_arr, not is_white)
 
         side_dynamic_attacks = self.__bb_processor.update_all_attacks64_dynamic(cp_side_pieces64_arr, updated_all_pieces_pos64)
         oppo_dynamic_attacks = self.__bb_processor.update_all_attacks64_dynamic(cp_oppo_pieces64_arr, updated_all_pieces_pos64)
@@ -99,9 +101,6 @@ class MoveValidator:
         
         side_king_pos64 = cp_side_pieces64_arr[4]
         enemy_king_pos64 = cp_oppo_pieces64_arr[4]
-
-        if side_king_pos64.bit_count() == 0:
-            raise Exception("Hey amk wtf!")
         
         if np.bitwise_and(oppo_all_attacks, side_king_pos64) > 0:
             return False, None
@@ -109,34 +108,34 @@ class MoveValidator:
         is_capture = np.bitwise_and(to_sqr_piece_pos64, all_oppo_pieces64) > 0
         is_check = np.bitwise_and(side_all_attacks, enemy_king_pos64) > 0
         
-        return True, {
-            "capture":is_capture,
-            "check":is_check,
-            "new_board_pos64":updated_all_pieces_pos64,
-            "from_sqr_pos64":from_sqr_piece_pos64,
-            "to_sqr_pos64":to_sqr_piece_pos64,
-            "piece_type_idx":piece_type_idx,
-        }
+        return True, MoveInfo(is_white=is_white,
+                              is_check=is_check,
+                              is_capture=is_capture,
+                              from_sqr_pos64=from_sqr_piece_pos64,
+                              to_sqr_pos64=to_sqr_piece_pos64,
+                              updated_board=updated_all_pieces_pos64,
+                              piece_type_idx=piece_type_idx)
     
     def generate_valid_moves(self,
                              side,
-                             all_side_pieces64_arr,
-                             all_oppo_pieces64_arr,
-                             all_pieces64,
-                             all_side_pieces64,
-                             all_oppo_pieces64):
+                             side_pieces,
+                             oppo_pieces,
+                             en_passant_squares,
+                             all_pieces_mask,
+                             side_pieces_mask,
+                             oppo_pieces_mask):
         valid_moves = {}
         for i in range(64):
             for f in range(64):
                 valid, info = self.is_valid(from_square_idx=i, 
                                             to_square_idx=f, 
-                                            side=side,
-                                            all_side_pieces64_arr=all_side_pieces64_arr,
-                                            all_oppo_pieces64_arr=all_oppo_pieces64_arr,
-                                            all_pieces64=all_pieces64,
-                                            all_side_pieces64=all_side_pieces64,
-                                            all_oppo_pieces64=all_oppo_pieces64,
-                                            en_passant_squares64=np.ulonglong(0))
+                                            is_white=side,
+                                            all_side_pieces64_arr=side_pieces,
+                                            all_oppo_pieces64_arr=oppo_pieces,
+                                            all_pieces64=all_pieces_mask,
+                                            all_side_pieces64=side_pieces_mask,
+                                            all_oppo_pieces64=oppo_pieces_mask,
+                                            en_passant_squares64=en_passant_squares)
                 if valid is True:
                     valid_moves[f"{Squares.idx_to_sqr(i)} -> {Squares.idx_to_sqr(f)}"] = info
         return valid_moves

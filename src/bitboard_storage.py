@@ -123,9 +123,10 @@ class BitboardMasks:
         self.__EDGE_MASK_BOTTOM = np.ulonglong(0b11111111)
         self.__EDGE_MASK_LEFT = np.ulonglong(0b1000000010000000100000001000000010000000100000001000000010000000)
         self.__EDGE_MASK_RIGHT = np.ulonglong(0b0000000100000001000000010000000100000001000000010000000100000001)
-        self.__EDGE_MASK_OMNI = np.bitwise_or.reduce([self.__EDGE_MASK_TOP, self.__EDGE_MASK_BOTTOM, self.__EDGE_MASK_LEFT, self.__EDGE_MASK_RIGHT])
         self.__W_EN_PASSANT_MASK = np.ulonglong(0b1111111100000000)
         self.__B_EN_PASSANT_MASK = np.ulonglong(0b0000000011111111 << 48)
+        self.__W_KING_MASK = np.ulonglong(0b1000)
+        self.__B_KING_MASK = np.ulonglong(0b0000100000000000000000000000000000000000000000000000000000000000)
         
         self.__RANK_STRIDE_LONG = 9
         self.__RANK_STRIDE_EQ = 8

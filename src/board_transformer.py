@@ -1,6 +1,4 @@
 import numpy as np
-from bitboard_printer import BitboardPrinter
-import copy
 
 class BoardTransformer:
     
@@ -8,24 +6,32 @@ class BoardTransformer:
         self.__bb_processor = bb_processor_obj
     
     def transform_board(self,
-                        side_pieces64_arr,
-                        oppo_pieces64_arr,
                         info,
                         board):
-        side = np.bitwise_and(np.ulonglong(0b1), board.data["castling_check_color"])
+        
 
-        if info["capture"]:
-            oppo_captured_piece_type_idx = self.__bb_processor.get_piece_type_and_idx(not side, info["to_sqr_pos64"], oppo_pieces64_arr)[1]
-            oppo_pieces64_arr[oppo_captured_piece_type_idx] = np.bitwise_xor(info["to_sqr_pos64"], oppo_pieces64_arr[oppo_captured_piece_type_idx])
-            board.data[f"all_{'b' if side else 'w'}_pieces"] = np.bitwise_or.reduce(oppo_pieces64_arr)
+        if info.is_capture:              
+            if board.is_white:
+                captured_piece_type_idx = self.__bb_processor.get_piece_type_and_idx(not info.is_white, info.to_sqr_pos64, board.b_pieces)[1]
+                board.b_pieces[captured_piece_type_idx] = np.bitwise_xor(info.to_sqr_pos64, board.b_pieces[captured_piece_type_idx])
+                board.b_pieces_mask = np.bitwise_or.reduce(board.b_pieces)
+            else:
+                captured_piece_type_idx = self.__bb_processor.get_piece_type_and_idx(not info.is_white, info.to_sqr_pos64, board.w_pieces)[1]
+                board.w_pieces[captured_piece_type_idx] = np.bitwise_xor(info.to_sqr_pos64, board.w_pieces[captured_piece_type_idx])
+                board.w_pieces_mask = np.bitwise_or.reduce(board.w_pieces)
+        
+        board_change = np.bitwise_or(info.from_sqr_pos64, info.to_sqr_pos64)
+        if board.is_white:
+            board.w_pieces[info.piece_type_idx] = np.bitwise_xor(board.w_pieces[info.piece_type_idx], board_change)
+            board.w_pieces_mask = np.bitwise_or.reduce(board.w_pieces)
+        else:
+            board.b_pieces[info.piece_type_idx] = np.bitwise_xor(board.b_pieces[info.piece_type_idx], board_change)
+            board.b_pieces_mask = np.bitwise_or.reduce(board.b_pieces)
+           
+        board.all_pieces_mask = info.updated_board
 
-        board_change = np.bitwise_or(info["from_sqr_pos64"], info["to_sqr_pos64"])
-        side_pieces64_arr[info["piece_type_idx"]] = np.bitwise_xor(side_pieces64_arr[info["piece_type_idx"]], board_change)
-        board.data[f"all_{'w' if side else 'b'}_pieces"] = np.bitwise_or.reduce(side_pieces64_arr)
-        board.data["all_pieces"] = info["new_board_pos64"] 
-
-        if info["check"]:
-            board.data["castling_check_color"] = np.bitwise_xor(np.ulonglong(0b01), board.data["castling_check_color"])
-            board.data["castling_check_color"] = np.bitwise_or(np.ulonglong(0b10), board.data["castling_check_color"])
+        if info.is_check:
+            board.is_check = np.ulonglong(0)
+            board.is_white = np.bitwise_xor(board.is_white, np.ulonglong(0b1))
             return
-        board.data["castling_check_color"] = np.bitwise_xor(np.ulonglong(0b01), board.data["castling_check_color"])
+        board.is_white = np.bitwise_xor(board.is_white, np.ulonglong(0b1))

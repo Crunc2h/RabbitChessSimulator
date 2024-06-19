@@ -1,8 +1,4 @@
 import numpy as np
-from static.pieces import Pieces
-from bitboard_storage import BitboardMasks
-from bitboard_helper import BitboardStorageHelper
-from bitboard_printer import BitboardPrinter
 
 class Positions:
     
@@ -23,25 +19,25 @@ class Positions:
                                  np.ulonglong(0b0000100000000000000000000000000000000000000000000000000000000000),
                                  np.ulonglong(0b0000000011111111000000000000000000000000000000000000000000000000),
                                  ]),
-        "castling_check_color": np.ulonglong(0b01),
-        "all_w_pieces":np.ulonglong(0),
-        "all_b_pieces":np.ulonglong(0),
-        "all_pieces":np.ulonglong(0)
+        "castling_rights": np.ulonglong(0b1111),
+        "is_white": np.ulonglong(0),
+        "check": np.ulonglong(0),
+        "en_passant_squares": np.ulonglong(0),
+        "w_pieces_mask":np.ulonglong(0),
+        "b_pieces_mask":np.ulonglong(0),
+        "all_pieces_mask":np.ulonglong(0)
     }
 
     @staticmethod
     def start_pos():
-        
-        
         all_w_pieces = np.bitwise_or.reduce(Positions.START_POS["w_pieces"])
         all_b_pieces = np.bitwise_or.reduce(Positions.START_POS["b_pieces"])
         all_pieces = np.bitwise_or(all_w_pieces, all_b_pieces)
 
-        Positions.START_POS["all_w_pieces"] = all_w_pieces
-        Positions.START_POS["all_b_pieces"] = all_b_pieces
-        Positions.START_POS["all_pieces"] = all_pieces
+        Positions.START_POS["w_pieces_mask"] = all_w_pieces
+        Positions.START_POS["b_pieces_mask"] = all_b_pieces
+        Positions.START_POS["all_pieces_mask"] = all_pieces
 
-        
         return Positions.START_POS
 
 
